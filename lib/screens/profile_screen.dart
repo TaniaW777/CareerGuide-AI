@@ -24,6 +24,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final List<String> _interests = ['Sciences', 'Technologie', 'Santé'];
 
+  // Current recommended sector (influences the background)
+  String _recommendedSector = 'Tech'; // Options: 'Tech', 'Agro', 'Health', 'Default'
+
   bool _isEditing = false;
   late Map<String, TextEditingController> _controllers;
 
@@ -39,6 +42,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  LinearGradient _getHeaderGradient() {
+    switch (_recommendedSector) {
+      case 'Tech':
+        return const LinearGradient(
+          colors: [Color(0xFF1A56DB), Color(0xFF1E3A8A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'Agro':
+        return const LinearGradient(
+          colors: [Color(0xFF059669), Color(0xFF065F46)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'Health':
+        return const LinearGradient(
+          colors: [Color(0xFFDC2626), Color(0xFF991B1B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      default:
+        return LinearGradient(
+          colors: [AppColors.primaryLight, AppColors.primaryLight.withOpacity(0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+    }
   }
 
   void _saveEdits() {
@@ -69,29 +101,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primaryLight, AppColors.primaryLight.withValues(alpha: 0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: _getHeaderGradient(),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
             ),
             child: Column(
               children: [
                 // Avatar
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 52,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      child: const Icon(Icons.person, size: 60, color: Colors.white),
-                    ),
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: AppColors.accentLight,
-                      child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
-                    ),
-                  ],
+                GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Accès à la galerie pour changer la photo...'),
+                        backgroundColor: AppColors.primaryLight,
+                      ),
+                    );
+                    // Mock update
+                    Future.delayed(const Duration(seconds: 1), () {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Photo de profil mise à jour ✓')),
+                        );
+                      }
+                    });
+                  },
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 52,
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                        child: const Icon(Icons.person, size: 60, color: Colors.white),
+                      ),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppColors.accentLight,
+                        child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -99,9 +152,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _userData['niveau'] ?? '',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Recommandation: $_recommendedSector',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -141,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: _actionCard(
                           context,
                           icon: Icons.auto_awesome,
-                          label: 'Mes Recommandations',
+                          label: 'Recommandations',
                           color: AppColors.accentLight,
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CareerPathsScreen())),
                         ),
@@ -155,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
                     ),
                     child: Column(
                       children: [
@@ -206,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   else _interests.remove(interest);
                                 });
                               },
-                              selectedColor: AppColors.primaryLight.withValues(alpha: 0.15),
+                              selectedColor: AppColors.primaryLight.withOpacity(0.15),
                               checkmarkColor: AppColors.primaryLight,
                               labelStyle: TextStyle(
                                 color: isSelected ? AppColors.primaryLight : subColor,
@@ -267,13 +327,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(width: 12),
@@ -285,17 +345,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _infoRow(BuildContext context, IconData icon, String label, String key, Color textColor, Color subColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: _isEditing
           ? TextField(
               controller: _controllers[key],
-              style: const TextStyle(color: Colors.black),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 labelText: label,
+                labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.grey),
                 prefixIcon: Icon(icon, color: AppColors.primaryLight),
-                fillColor: Colors.white,
+                fillColor: isDark ? AppColors.surfaceDark : Colors.grey[50],
                 filled: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
             )
           : Row(
@@ -315,3 +378,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

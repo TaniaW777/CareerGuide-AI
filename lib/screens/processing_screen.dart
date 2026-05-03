@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:async';
 import '../core/theme/app_colors.dart';
 import 'career_paths_screen.dart';
@@ -13,10 +14,9 @@ class ProcessingScreen extends StatefulWidget {
 class _ProcessingScreenState extends State<ProcessingScreen> {
   int _tipIndex = 0;
   final List<String> _tips = [
-    "Analyse de vos préférences...",
-    "Comparaison avec les filières locales...",
-    "Évaluation des débouchés au Burkina...",
-    "Génération de recommandations personnalisées..."
+    "L'IA analyse tes reponses...",
+    "Recherche des meilleures options...",
+    "Préparation des recommandations..."
   ];
 
   @override
@@ -30,7 +30,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
       }
     });
 
-    Future.delayed(const Duration(seconds: 8), () {
+    Future.delayed(const Duration(seconds: 6), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -42,26 +42,25 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.primaryLight,
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 120,
-                width: 120,
-                child: CircularProgressIndicator(
-                  strokeWidth: 8,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              const Spacer(),
+              Text(
+                'Enregistrement de ton profil',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              const SizedBox(height: 60),
-              const Text(
-                'Analyse en cours',
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               AnimatedSwitcher(
@@ -70,9 +69,19 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
                   _tips[_tipIndex],
                   key: ValueKey(_tips[_tipIndex]),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.grey[600],
+                    fontSize: 16,
+                  ),
                 ),
               ),
+              const SizedBox(height: 60),
+              SpinKitSpinningLines(
+                color: AppColors.primaryLight,
+                size: 120.0,
+                lineWidth: 4.0,
+              ),
+              const Spacer(),
             ],
           ),
         ),

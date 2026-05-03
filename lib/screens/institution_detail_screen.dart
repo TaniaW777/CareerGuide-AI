@@ -27,13 +27,20 @@ class InstitutionDetailScreen extends StatelessWidget {
             expandedHeight: 220,
             pinned: true,
             backgroundColor: AppColors.primaryLight,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Retour aux recommandations')));
+                Navigator.pop(context);
+              },
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: AppColors.primaryLight.withValues(alpha: 0.3),
-                  child: const Icon(Icons.school, size: 80, color: Colors.white),
+                errorBuilder: (_, __, ___) => Image.network(
+                  'https://images.unsplash.com/photo-1541339907198-e08756ebafe3?w=500&auto=format&fit=crop&q=60',
+                  fit: BoxFit.cover,
                 ),
               ),
             ),

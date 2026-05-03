@@ -12,36 +12,69 @@ class InstitutionsScreen extends StatefulWidget {
 
 class _InstitutionsScreenState extends State<InstitutionsScreen> {
   String _searchQuery = '';
-  String _selectedFilter = 'Tous';
-  final List<String> _filters = ['Tous', 'Public', 'Privé'];
+  String _selectedType = 'Tous'; // Public, Privé
+  String _selectedCategory = 'Tous'; // Lycée, Université, Institut
+  String _selectedLevel = 'Tous'; // 3ème, Terminale, etc.
+
+  final List<String> _types = ['Tous', 'Public', 'Privé'];
+  final List<String> _categories = ['Tous', 'Lycée', 'Université', 'Institut'];
+  final List<String> _levels = ['Tous', '3ème', 'Terminale', 'Post-Bac'];
 
   final List<Map<String, String>> _institutions = [
     {
       'name': 'Lycée Polytechnique de Ouagadougou',
       'location': 'Ouagadougou, Burkina Faso',
-      'category': 'Technique & Industriel',
+      'category': 'Lycée',
       'type': 'Public',
+      'level': '3ème',
       'image': 'https://images.unsplash.com/photo-1541339907198-e08756ebafe3?w=500&auto=format&fit=crop&q=60',
-    },
-    {
-      'name': 'Institut Supérieur de Technologies',
-      'location': 'Bobo-Dioulasso, Burkina Faso',
-      'category': 'Informatique & Gestion',
-      'type': 'Privé',
-      'image': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&auto=format&fit=crop&q=60',
     },
     {
       'name': 'Université Joseph Ki-Zerbo',
       'location': 'Ouagadougou, Burkina Faso',
-      'category': 'Sciences & Lettres',
+      'category': 'Université',
       'type': 'Public',
+      'level': 'Post-Bac',
       'image': 'https://images.unsplash.com/photo-1562774053-701939374585?w=500&auto=format&fit=crop&q=60',
     },
     {
-      'name': 'Centre de Formation en Santé',
-      'location': 'Koudougou, Burkina Faso',
-      'category': 'Santé & Social',
+      'name': 'Institut Supérieur de Technologies (IST)',
+      'location': 'Bobo-Dioulasso, Burkina Faso',
+      'category': 'Institut',
       'type': 'Privé',
+      'level': 'Terminale',
+      'image': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'name': 'Lycée Technique de Bobo',
+      'location': 'Bobo-Dioulasso, Burkina Faso',
+      'category': 'Lycée',
+      'type': 'Public',
+      'level': '3ème',
+      'image': 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'name': 'Lycée Scientifique National',
+      'location': 'Ouagadougou, Burkina Faso',
+      'category': 'Lycée',
+      'type': 'Public',
+      'level': '3ème',
+      'image': 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'name': 'Aube Nouvelle (ISIG)',
+      'location': 'Ouagadougou, Burkina Faso',
+      'category': 'Université',
+      'type': 'Privé',
+      'level': 'Terminale',
+      'image': 'https://images.unsplash.com/photo-1525921429624-479b6a29d84c?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'name': 'Centre de Formation Professionnelle',
+      'location': 'Koudougou, Burkina Faso',
+      'category': 'Institut',
+      'type': 'Public',
+      'level': '3ème',
       'image': 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=500&auto=format&fit=crop&q=60',
     },
   ];
@@ -51,8 +84,11 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       final matchesSearch = _searchQuery.isEmpty ||
           inst['name']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           inst['category']!.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesFilter = _selectedFilter == 'Tous' || inst['type'] == _selectedFilter;
-      return matchesSearch && matchesFilter;
+      final matchesType = _selectedType == 'Tous' || inst['type'] == _selectedType;
+      final matchesCategory = _selectedCategory == 'Tous' || inst['category'] == _selectedCategory;
+      final matchesLevel = _selectedLevel == 'Tous' || inst['level'] == _selectedLevel;
+      
+      return matchesSearch && matchesType && matchesCategory && matchesLevel;
     }).toList();
   }
 
@@ -60,55 +96,77 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Filtres avancés', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            const Text('Localisation', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              children: ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou'].map((city) => FilterChip(
-                label: Text(city),
-                onSelected: (v) {},
-                selected: false,
-              )).toList(),
-            ),
-            const SizedBox(height: 20),
-            const Text('Niveau d\'étude', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              children: ['Baccalauréat', 'Licence', 'Master'].map((level) => FilterChip(
-                label: Text(level),
-                onSelected: (v) {},
-                selected: false,
-              )).toList(),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryLight,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtres avancés', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                ],
               ),
-              child: const Text('Appliquer les filtres'),
-            ),
-          ],
+              const SizedBox(height: 24),
+              const Text('Type d\'établissement', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                children: _categories.map((cat) => ChoiceChip(
+                  label: Text(cat),
+                  selected: _selectedCategory == cat,
+                  onSelected: (v) => setModalState(() => setState(() => _selectedCategory = cat)),
+                )).toList(),
+              ),
+              const SizedBox(height: 20),
+              const Text('Niveau d\'étude cible', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                children: _levels.map((lvl) => ChoiceChip(
+                  label: Text(lvl),
+                  selected: _selectedLevel == lvl,
+                  onSelected: (v) => setModalState(() => setState(() => _selectedLevel = lvl)),
+                )).toList(),
+              ),
+              const SizedBox(height: 20),
+              const Text('Secteur', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                children: _types.map((type) => ChoiceChip(
+                  label: Text(type),
+                  selected: _selectedType == type,
+                  onSelected: (v) => setModalState(() => setState(() => _selectedType = type)),
+                )).toList(),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 55),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Appliquer les filtres', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +178,18 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       backgroundColor: bgColor,
       body: CustomScrollView(
         slivers: [
+          SliverAppBar(
+            floating: true,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: bgColor,
+            foregroundColor: isDark ? Colors.white : Colors.black,
+            title: const Text('Établissements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
           // Search bar
           SliverToBoxAdapter(
             child: Padding(
@@ -131,10 +201,10 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
                       ),
                       child: TextField(
-                        style: const TextStyle(color: Colors.black),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
                         onChanged: (v) => setState(() => _searchQuery = v),
                         decoration: const InputDecoration(
                           hintText: 'Rechercher une école...',
@@ -184,7 +254,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.school, color: Colors.white, size: 26),
@@ -224,15 +294,15 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.accentLight.withValues(alpha: 0.3)),
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
+                  border: Border.all(color: AppColors.accentLight.withOpacity(0.3)),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.accentLight.withValues(alpha: 0.1),
+                        color: AppColors.accentLight.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.business, color: AppColors.accentLight, size: 22),
@@ -259,31 +329,35 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Row(
-                children: [
-                  Text('Établissements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Colors.black)),
-                  const Spacer(),
-                  ..._filters.map((f) {
-                    final isActive = f == _selectedFilter;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedFilter = f),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: isActive ? AppColors.primaryLight : cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: isActive ? AppColors.primaryLight : Colors.grey.shade200),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Text('Filtre rapide:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black)),
+                    const SizedBox(width: 8),
+                    ..._categories.map((f) {
+                      final isActive = f == _selectedCategory;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedCategory = f),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: isActive ? AppColors.primaryLight : cardColor,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: isActive ? AppColors.primaryLight : Colors.grey.shade200),
+                          ),
+                          child: Text(f, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)),
                         ),
-                        child: Text(f, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)),
-                      ),
-                    );
-                  }),
-                ],
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
           ),
+
 
           // Institution cards list
           SliverPadding(
@@ -343,8 +417,16 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   height: 140,
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.school, size: 50, color: Colors.grey),
+                  width: double.infinity,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.grey[100],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.school_outlined, color: Colors.grey.withOpacity(0.5), size: 40),
+                      const SizedBox(height: 8),
+                      Text('Image non disponible', style: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 12)),
+                    ],
+                  ),
                 ),
               ),
             ),

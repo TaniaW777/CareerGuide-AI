@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import '../core/widgets/search_bar_widget.dart';
 
 class AdvisorChatScreen extends StatefulWidget {
   const AdvisorChatScreen({super.key});
@@ -70,13 +71,7 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Conseiller IA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            Text('En ligne', style: TextStyle(color: Colors.green, fontSize: 12)),
-          ],
-        ),
+        title: const Text('Conseiller IA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
@@ -159,57 +154,40 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
   }
 
   Widget _buildInputArea() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          )
-        ],
+        color: Theme.of(context).brightness == Brightness.dark ? AppColors.backgroundDark : Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
       ),
       child: SafeArea(
         child: Row(
           children: [
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: const InputDecoration(
-                    hintText: 'Posez votre question...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
-                  onSubmitted: (_) => _sendMessage(),
-                ),
+              child: SearchBarWidget(
+                controller: _controller,
+                hintText: 'Posez votre question...',
+                prefixIcon: Icons.psychology_outlined,
+                onSubmitted: _sendMessage,
               ),
             ),
             const SizedBox(width: 12),
             GestureDetector(
               onTap: _sendMessage,
               child: Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primaryLight, Color(0xFF1A56DB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryLight.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      color: AppColors.primaryLight.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
                     )
                   ],
                 ),
@@ -222,3 +200,5 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
     );
   }
 }
+
+

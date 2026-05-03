@@ -225,9 +225,24 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(
-                          onPressed: _currentStep == _totalSteps - 1
-                              ? () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProcessingScreen()))
-                              : () => setState(() => _currentStep++),
+                          onPressed: () {
+                            // Validate that current question is answered
+                            if (_questions[_currentStep].selectedIndex == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Veuillez répondre à cette question avant de continuer.'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                              return;
+                            }
+                            
+                            if (_currentStep == _totalSteps - 1) {
+                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProcessingScreen()));
+                            } else {
+                              setState(() => _currentStep++);
+                            }
+                          },
                           icon: Icon(_currentStep == _totalSteps - 1 ? Icons.auto_awesome : Icons.arrow_forward),
                           label: Text(_currentStep == _totalSteps - 1 ? 'VOIR MES RÉSULTATS' : 'SUIVANT'),
                           style: ElevatedButton.styleFrom(

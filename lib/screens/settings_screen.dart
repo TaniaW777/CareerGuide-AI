@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/theme_provider.dart';
 import 'profile_screen.dart';
+import 'annex_screens.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -87,9 +88,25 @@ class SettingsScreen extends StatelessWidget {
           _buildSettingItem(context, 'Changer de mot de passe', Icons.lock_outline, Colors.orange, onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fonctionnalité bientôt disponible')));
           }),
-          _buildSettingItem(context, 'Confidentialité', Icons.security_outlined, Colors.green),
+          _buildSettingItem(
+            context, 
+            'Confidentialité', 
+            Icons.security_outlined, 
+            Colors.green,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SimpleTextScreen(
+              title: 'Confidentialité',
+              content: 'Votre vie privée et vos données sont protégées. Nous ne partageons vos données qu\'avec votre consentement pour vous fournir de meilleures recommandations.',
+            ))),
+          ),
           const SizedBox(height: 24),
           _sectionHeader('PRÉFÉRENCES'),
+          _buildSettingItem(
+            context, 
+            'Centres d\'intérêt', 
+            Icons.favorite_outline, 
+            Colors.pink,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InterestsSettingsScreen())),
+          ),
           _buildSettingItem(
             context, 
             'Langue', 
@@ -108,8 +125,26 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _sectionHeader('SUPPORT'),
-          _buildSettingItem(context, 'Centre d\'aide', Icons.help_outline, Colors.teal),
-          _buildSettingItem(context, 'À propos de CareerGuide AI', Icons.info_outline, Colors.blueGrey),
+          _buildSettingItem(
+            context, 
+            'Centre d\'aide', 
+            Icons.help_outline, 
+            Colors.teal,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SimpleTextScreen(
+              title: 'Centre d\'aide',
+              content: 'Si vous avez des difficultés, contactez notre équipe de support à support@careerguide.bf.',
+            ))),
+          ),
+          _buildSettingItem(
+            context, 
+            'À propos de CareerGuide AI', 
+            Icons.info_outline, 
+            Colors.blueGrey,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SimpleTextScreen(
+              title: 'À propos',
+              content: 'CareerGuide AI v1.0.0\n\nCréé pour aider les étudiants du Burkina Faso à trouver leur voie professionnelle.',
+            ))),
+          ),
           const SizedBox(height: 40),
           Center(
             child: Text(

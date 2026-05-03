@@ -8,6 +8,7 @@ class ScholarshipListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final scholarships = [
       {
         'title': 'Bourse d\'Excellence Gouvernementale',
@@ -40,11 +41,11 @@ class ScholarshipListScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
         title: const Text('Bourses disponibles', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
       ),
       body: ListView.separated(
@@ -57,10 +58,10 @@ class ScholarshipListScreen extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? AppColors.surfaceDark : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade100),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+              border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade100),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +72,7 @@ class ScholarshipListScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
+                        color: color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(s['type'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -86,7 +87,7 @@ class ScholarshipListScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Text(s['title'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(s['title'] as String, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -134,28 +135,94 @@ class CareerDetailScreen extends StatelessWidget {
     required this.color,
   });
 
+  void _showShareDialog(BuildContext context, String title) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            const Text('Partager cette recommandation', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text('Partagez vos résultats pour "$title" avec vos amis ou conseillers.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _shareOption(context, Icons.message, 'WhatsApp', Colors.green),
+                _shareOption(context, Icons.facebook, 'Facebook', Colors.blue),
+                _shareOption(context, Icons.link, 'Copier', Colors.grey),
+              ],
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _shareOption(BuildContext context, IconData icon, String label, Color color) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Partage sur $label en cours...'),
+            backgroundColor: color,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          CircleAvatar(radius: 28, backgroundColor: color.withOpacity(0.1), child: Icon(icon, color: color, size: 28)),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.backgroundDark : Colors.white,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,
             expandedHeight: 200,
             backgroundColor: color,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined, color: Colors.white),
+                onPressed: () => _showShareDialog(context, title),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.6)],
+                    colors: [color, color.withOpacity(0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.work_outline, size: 80, color: Colors.white.withValues(alpha: 0.3)),
+                  child: Icon(Icons.school_outlined, size: 80, color: Colors.white.withOpacity(0.3)),
                 ),
               ),
             ),
@@ -189,17 +256,19 @@ class CareerDetailScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 16),
-                  const Text('Compétences requises', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                  const Text('Compétences & Passions clés', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Text('Cliquez sur un élément pour comprendre l\'orientation', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: ['Analyse de données', 'Gestion de projet', 'Communication', 'Leadership', 'Innovation']
-                        .map((s) => Chip(
-                              label: Text(s, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-                              backgroundColor: color.withValues(alpha: 0.1),
-                            ))
-                        .toList(),
+                    children: [
+                      _buildFeedbackChip(context, 'Analyse de données', 'Compétence', 'Votre aisance avec les chiffres et les statistiques a été déterminante.', color),
+                      _buildFeedbackChip(context, 'Innovation', 'Passion', 'Votre goût pour la nouveauté correspond parfaitement à ce métier.', color),
+                      _buildFeedbackChip(context, 'Communication', 'Compétence', 'Votre capacité à transmettre des idées est un atout majeur.', color),
+                      _buildFeedbackChip(context, 'Résolution de problèmes', 'Passion', 'Votre persévérance face aux défis a orienté ce choix.', color),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   const Text('Débouchés au Burkina Faso', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
@@ -242,6 +311,42 @@ class CareerDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildFeedbackChip(BuildContext context, String label, String type, String explanation, Color color) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                  child: Text(type, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 12),
+                Text(explanation, style: const TextStyle(height: 1.5)),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Compris')),
+            ],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          ),
+        );
+      },
+      child: Chip(
+        label: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13)),
+        backgroundColor: color.withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: color.withOpacity(0.2))),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      ),
+    );
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -252,28 +357,31 @@ class PrivateInstitutionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.surfaceDark : Colors.white;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
         title: const Text('Instituts Privés', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _buildInstitut(context, 'Institut Supérieur de Technologies', 'Bobo-Dioulasso', 'Privé', 'Tech & Numérique'),
+          _buildInstitut(context, 'Institut Supérieur de Technologies', 'Bobo-Dioulasso', 'Privé', 'Tech & Numérique', isDark, cardColor),
           const SizedBox(height: 16),
-          _buildInstitut(context, 'École de Commerce du Sahel', 'Ouagadougou', 'Privé', 'Commerce & Finance'),
+          _buildInstitut(context, 'École de Commerce du Sahel', 'Ouagadougou', 'Privé', 'Commerce & Finance', isDark, cardColor),
           const SizedBox(height: 16),
-          _buildInstitut(context, 'Centre de Formation en Santé', 'Koudougou', 'Privé', 'Santé & Social'),
+          _buildInstitut(context, 'Centre de Formation en Santé', 'Koudougou', 'Privé', 'Santé & Social', isDark, cardColor),
         ],
       ),
     );
   }
 
-  Widget _buildInstitut(BuildContext context, String name, String loc, String type, String cat) {
+  Widget _buildInstitut(BuildContext context, String name, String loc, String type, String cat, bool isDark, Color cardColor) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -288,17 +396,17 @@ class PrivateInstitutionsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.grey.shade100),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+          border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade100),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withValues(alpha: 0.08),
+                color: AppColors.primaryLight.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.business, color: AppColors.primaryLight, size: 28),
@@ -308,7 +416,7 @@ class PrivateInstitutionsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black)),
                   const SizedBox(height: 4),
                   Text(loc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   const SizedBox(height: 4),
@@ -319,6 +427,90 @@ class PrivateInstitutionsScreen extends StatelessWidget {
             const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// -------------------------------------------------------------------------
+// Settings Annex Screens
+// -------------------------------------------------------------------------
+class SimpleTextScreen extends StatelessWidget {
+  final String title;
+  final String content;
+
+  const SimpleTextScreen({super.key, required this.title, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
+      appBar: AppBar(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          content,
+          style: TextStyle(
+            fontSize: 16,
+            height: 1.6,
+            color: isDark ? Colors.white70 : Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class InterestsSettingsScreen extends StatelessWidget {
+  const InterestsSettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
+      appBar: AppBar(
+        title: const Text('Centres d\'intérêt', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text('Modifiez vos domaines favoris', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+          const SizedBox(height: 16),
+          CheckboxListTile(
+            value: true,
+            onChanged: (v) {},
+            title: const Text('Science et Technologie'),
+            activeColor: AppColors.primaryLight,
+          ),
+          CheckboxListTile(
+            value: true,
+            onChanged: (v) {},
+            title: const Text('Commerce et Gestion'),
+            activeColor: AppColors.primaryLight,
+          ),
+          CheckboxListTile(
+            value: false,
+            onChanged: (v) {},
+            title: const Text('Santé et Bien Être'),
+            activeColor: AppColors.primaryLight,
+          ),
+          CheckboxListTile(
+            value: false,
+            onChanged: (v) {},
+            title: const Text('Art et Culture'),
+            activeColor: AppColors.primaryLight,
+          ),
+        ],
       ),
     );
   }
