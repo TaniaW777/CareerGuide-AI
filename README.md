@@ -1,4 +1,6 @@
-# careerguide_ai
+# CareerGuide AI
+
+🚀 **Application déployée sur :** [https://aziliz-kabore.github.io/CareerGuide-AI/](https://aziliz-kabore.github.io/CareerGuide-AI/)
 
 A new Flutter project.
 
