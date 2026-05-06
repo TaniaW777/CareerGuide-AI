@@ -184,11 +184,20 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
             elevation: 0,
             backgroundColor: bgColor,
             foregroundColor: isDark ? Colors.white : Colors.black,
-            title: const Text('Établissements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              onPressed: () => Navigator.pop(context),
+            title: Row(
+              children: [
+                Image.asset('assets/images/logo.png', height: 28, errorBuilder: (c, e, s) => const Icon(Icons.school, size: 28)),
+                const SizedBox(width: 10),
+                const Text('Établissements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
             ),
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none),
+                onPressed: () {},
+              ),
+            ],
           ),
           // Search bar
           SliverToBoxAdapter(

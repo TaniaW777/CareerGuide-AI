@@ -9,71 +9,121 @@ class ProfileSetupScreen extends StatefulWidget {
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTickerProviderStateMixin {
   int _currentStep = 1;
-  final int _totalSteps = 3;
+  final int _totalSteps = 4;
 
-  // Step 1
-  final TextEditingController _nameController = TextEditingController();
+  // Step 1 - Identity
+  final TextEditingController _nomController = TextEditingController();
+  final TextEditingController _prenomController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _contactController = TextEditingController();
+
+  // Step 2 - Academic
   String? _selectedClasse;
   String? _selectedSerie;
   String? _selectedVille;
   final TextEditingController _otherClasseController = TextEditingController();
   final TextEditingController _otherSerieController = TextEditingController();
 
-  // Step 2
+  // Step 3 - Interests
   final Set<String> _selectedInterests = {};
   bool _showOtherInterestField = false;
   final TextEditingController _otherInterestController = TextEditingController();
-  
-  // Step 3
+
+  // Step 4 - Subjects
   final Set<String> _selectedSubjects = {};
   bool _showOtherSubjectField = false;
   final TextEditingController _otherSubjectController = TextEditingController();
 
   final List<String> _villes = [
-    'Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Banfora', 'Ouahigouya', 
+    'Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Banfora', 'Ouahigouya',
     'Kaya', 'Tenkodogo', 'Fada N\'Gourma', 'Dédougou', 'Dori'
   ];
 
+  bool _isTransitioning = false;
+  late AnimationController _transitionController;
+  late Animation<double> _transitionFade;
+  late Animation<double> _transitionScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _transitionController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800));
+    _transitionFade = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _transitionController, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
+    );
+    _transitionScale = Tween<double>(begin: 1.0, end: 0.85).animate(
+      CurvedAnimation(parent: _transitionController, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
+    );
+    _transitionController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 600),
+            pageBuilder: (_, __, ___) => const QuestionFlowScreen(),
+            transitionsBuilder: (_, animation, __, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+                      .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                  child: child,
+                ),
+              );
+            },
+          ),
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
-    _nameController.dispose();
+    _nomController.dispose();
+    _prenomController.dispose();
     _ageController.dispose();
+    _contactController.dispose();
     _otherClasseController.dispose();
     _otherSerieController.dispose();
     _otherInterestController.dispose();
     _otherSubjectController.dispose();
+    _transitionController.dispose();
     super.dispose();
   }
 
   void _nextStep() {
     if (_currentStep == 1) {
-      if (_nameController.text.trim().isEmpty || _ageController.text.trim().isEmpty || _selectedClasse == null || _selectedVille == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez remplir toutes les informations.'), backgroundColor: Colors.redAccent));
-        return;
-      }
-      if (_selectedClasse == 'Autre' && _otherClasseController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez préciser votre classe.'), backgroundColor: Colors.redAccent));
-        return;
-      }
-      if (_selectedClasse == 'Tle' && _selectedSerie == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner votre série.'), backgroundColor: Colors.redAccent));
-        return;
-      }
-      if (_selectedClasse == 'Tle' && _selectedSerie == 'Autre' && _otherSerieController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez préciser votre série.'), backgroundColor: Colors.redAccent));
+      if (_nomController.text.trim().isEmpty || _prenomController.text.trim().isEmpty || _ageController.text.trim().isEmpty || _contactController.text.trim().isEmpty) {
+        _showError('Veuillez remplir tous les champs.');
         return;
       }
     } else if (_currentStep == 2) {
-      if (_selectedInterests.isEmpty && (!_showOtherInterestField || _otherInterestController.text.trim().isEmpty)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner au moins un centre d\'intérêt.'), backgroundColor: Colors.redAccent));
+      if (_selectedClasse == null || _selectedVille == null) {
+        _showError('Veuillez remplir toutes les informations.');
+        return;
+      }
+      if (_selectedClasse == 'Autre' && _otherClasseController.text.trim().isEmpty) {
+        _showError('Veuillez préciser votre classe.');
+        return;
+      }
+      if (_selectedClasse == 'Tle' && _selectedSerie == null) {
+        _showError('Veuillez sélectionner votre série.');
+        return;
+      }
+      if (_selectedClasse == 'Tle' && _selectedSerie == 'Autre' && _otherSerieController.text.trim().isEmpty) {
+        _showError('Veuillez préciser votre série.');
         return;
       }
     } else if (_currentStep == 3) {
+      if (_selectedInterests.isEmpty && (!_showOtherInterestField || _otherInterestController.text.trim().isEmpty)) {
+        _showError('Veuillez sélectionner au moins un centre d\'intérêt.');
+        return;
+      }
+    } else if (_currentStep == 4) {
       if (_selectedSubjects.isEmpty && (!_showOtherSubjectField || _otherSubjectController.text.trim().isEmpty)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez sélectionner au moins une matière.'), backgroundColor: Colors.redAccent));
+        _showError('Veuillez sélectionner au moins une matière.');
         return;
       }
     }
@@ -81,32 +131,32 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (_currentStep < _totalSteps) {
       setState(() => _currentStep++);
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const QuestionFlowScreen()),
-      );
+      // Trigger transition animation then navigate
+      setState(() => _isTransitioning = true);
+      _transitionController.forward();
     }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.redAccent));
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    Widget body = Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.primaryLight),
-          onPressed: () {
-            if (_currentStep > 1) {
-              setState(() => _currentStep--);
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
+        leading: _currentStep > 1
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: AppColors.primaryLight),
+                onPressed: () => setState(() => _currentStep--),
+              )
+            : null,
+        automaticallyImplyLeading: false,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -125,13 +175,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Etape $_currentStep sur $_totalSteps', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                  if (_currentStep == 2)
+                  Text('Étape $_currentStep sur $_totalSteps', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                  if (_currentStep == 1)
+                    Text('Inscription', style: TextStyle(color: AppColors.primaryLight, fontSize: 12, fontWeight: FontWeight.w600)),
+                  if (_currentStep == 3)
                     Text('Ton profil commence à se dessiner', style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic)),
                 ],
               ),
               const SizedBox(height: 10),
-              // Progress Bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
@@ -143,23 +194,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ),
               const SizedBox(height: 32),
               Expanded(
-                child: SingleChildScrollView(
-                  child: _buildStepContent(isDark),
-                ),
+                child: SingleChildScrollView(child: _buildStepContent(isDark)),
               ),
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
-                  onPressed: _nextStep,
+                  onPressed: _isTransitioning ? null : _nextStep,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryLight,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 60),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
-                  child: const Text(
-                    'Continuer',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  child: Text(
+                    _currentStep == _totalSteps ? 'Terminer l\'inscription' : 'Continuer',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
               ),
@@ -169,6 +218,50 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         ),
       ),
     );
+
+    // Wrap with transition animation
+    if (_isTransitioning) {
+      return AnimatedBuilder(
+        animation: _transitionController,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              // Fading out current screen
+              Opacity(
+                opacity: _transitionFade.value,
+                child: Transform.scale(scale: _transitionScale.value, child: body),
+              ),
+              // Transition overlay
+              Opacity(
+                opacity: 1 - _transitionFade.value,
+                child: Scaffold(
+                  backgroundColor: AppColors.primaryLight,
+                  body: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 50, height: 50,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.9)),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text('Préparation du questionnaire IA...', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 8),
+                        Text('Un instant s\'il vous plaît', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+    return body;
   }
 
   Widget _buildStepContent(bool isDark) {
@@ -177,15 +270,31 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Informations Personnelles',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
-            ),
-            const SizedBox(height: 24),
-            _buildTextField('Nom et Prénom', _nameController, isDark),
+            Icon(Icons.person_add_outlined, size: 40, color: AppColors.primaryLight),
+            const SizedBox(height: 12),
+            Text('Inscription', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            const SizedBox(height: 6),
+            Text('Parle-nous un peu de toi pour commencer.', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+            const SizedBox(height: 28),
+            _buildTextField('Nom', _nomController, isDark, icon: Icons.badge_outlined),
             const SizedBox(height: 16),
-            _buildTextField('Âge', _ageController, isDark, isNumber: true),
-            const SizedBox(height: 24),
+            _buildTextField('Prénom', _prenomController, isDark, icon: Icons.person_outline),
+            const SizedBox(height: 16),
+            _buildTextField('Âge', _ageController, isDark, isNumber: true, icon: Icons.cake_outlined),
+            const SizedBox(height: 16),
+            _buildTextField('Contact (téléphone)', _contactController, isDark, isPhone: true, icon: Icons.phone_outlined),
+          ],
+        );
+      case 2:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.school_outlined, size: 40, color: AppColors.primaryLight),
+            const SizedBox(height: 12),
+            Text('Informations Scolaires', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            const SizedBox(height: 6),
+            Text('Dis-nous où tu en es dans ton parcours.', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+            const SizedBox(height: 28),
             Text('Classe actuelle', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
             const SizedBox(height: 10),
             Row(
@@ -206,8 +315,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               Text('Série ou Option', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
               const SizedBox(height: 10),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 12, runSpacing: 12,
                 children: ['A', 'D', 'C', 'E', 'F', 'Autre'].map((serie) {
                   return _buildSelectButtonCircle(serie, _selectedSerie == serie, (v) => setState(() => _selectedSerie = v), isDark);
                 }).toList(),
@@ -227,29 +335,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: isDark ? Colors.white10 : Colors.grey[50],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                prefixIcon: Icon(Icons.location_on_outlined, color: Colors.grey[400]),
               ),
               items: _villes.map((e) => DropdownMenuItem(value: e, child: Text(e, style: TextStyle(color: isDark ? Colors.white : Colors.black)))).toList(),
               onChanged: (v) => setState(() => _selectedVille = v),
             ),
           ],
         );
-      case 2:
+      case 3:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Quels sont tes centres d\'intérêts Principaux?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Sélectionne les domaines qui t\'attirent le plus.',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500], height: 1.5),
-            ),
+            Icon(Icons.interests_outlined, size: 40, color: AppColors.primaryLight),
+            const SizedBox(height: 12),
+            Text('Quels sont tes centres d\'intérêts ?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            const SizedBox(height: 6),
+            Text('Sélectionne les domaines qui t\'attirent le plus.', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
             const SizedBox(height: 24),
             _buildInterestCard('Science et Technologie', 'Innovation, Recherche et Informatique', isDark),
             const SizedBox(height: 12),
@@ -259,101 +361,59 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             const SizedBox(height: 12),
             _buildInterestCard('Art et Culture', 'Design, Musique et Patrimoine', isDark),
             const SizedBox(height: 12),
-            
-            // "Autre" Option
             GestureDetector(
-              onTap: () {
-                setState(() {
-                  _showOtherInterestField = !_showOtherInterestField;
-                });
-              },
+              onTap: () => setState(() => _showOtherInterestField = !_showOtherInterestField),
               child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                width: double.infinity, padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: _showOtherInterestField ? AppColors.primaryLight.withOpacity(0.1) : (isDark ? Colors.white10 : Colors.grey[100]),
                   border: Border.all(color: _showOtherInterestField ? AppColors.primaryLight : Colors.transparent, width: 2),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Center(
-                  child: Text(
-                    'Autre',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _showOtherInterestField ? AppColors.primaryLight : (isDark ? Colors.white : Colors.black87),
-                    ),
-                  ),
-                ),
+                child: Center(child: Text('Autre', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _showOtherInterestField ? AppColors.primaryLight : (isDark ? Colors.white : Colors.black87)))),
               ),
             ),
             if (_showOtherInterestField) ...[
               const SizedBox(height: 16),
               _buildTextField('Précisez votre intérêt', _otherInterestController, isDark),
-            ]
+            ],
           ],
         );
       default:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Quelles matières préfères-tu à l\'école ?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
-            ),
+            Icon(Icons.menu_book_outlined, size: 40, color: AppColors.primaryLight),
+            const SizedBox(height: 12),
+            Text('Quelles matières préfères-tu ?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
             const SizedBox(height: 24),
             Text('Sciences', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _buildSubjectChip('Mathématiques', isDark),
-                _buildSubjectChip('Physique-Chimie', isDark),
-                _buildSubjectChip('SVT', isDark),
-                _buildSubjectChip('Informatique', isDark),
-              ],
-            ),
+            Wrap(spacing: 12, runSpacing: 12, children: [
+              _buildSubjectChip('Mathématiques', isDark), _buildSubjectChip('Physique-Chimie', isDark),
+              _buildSubjectChip('SVT', isDark), _buildSubjectChip('Informatique', isDark),
+            ]),
             const SizedBox(height: 20),
             Text('Lettres & Langues', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _buildSubjectChip('Français', isDark),
-                _buildSubjectChip('Anglais', isDark),
-                _buildSubjectChip('Philosophie', isDark),
-              ],
-            ),
+            Wrap(spacing: 12, runSpacing: 12, children: [
+              _buildSubjectChip('Français', isDark), _buildSubjectChip('Anglais', isDark), _buildSubjectChip('Philosophie', isDark),
+            ]),
             const SizedBox(height: 20),
             Text('Autres', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _buildSubjectChip('Histoire-Géo', isDark),
-                _buildSubjectChip('EPS', isDark),
-                FilterChip(
-                  label: const Text('Autre'),
-                  selected: _showOtherSubjectField,
-                  onSelected: (v) => setState(() => _showOtherSubjectField = v),
-                  selectedColor: Colors.white,
-                  checkmarkColor: AppColors.primaryLight,
-                  backgroundColor: isDark ? Colors.white10 : Colors.grey[100],
-                  labelStyle: TextStyle(
-                    fontWeight: _showOtherSubjectField ? FontWeight.bold : FontWeight.normal,
-                    color: _showOtherSubjectField ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: _showOtherSubjectField ? AppColors.primaryLight : Colors.transparent, width: _showOtherSubjectField ? 2 : 1),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ],
-            ),
+            Wrap(spacing: 12, runSpacing: 12, children: [
+              _buildSubjectChip('Histoire-Géo', isDark), _buildSubjectChip('EPS', isDark),
+              FilterChip(
+                label: const Text('Autre'), selected: _showOtherSubjectField,
+                onSelected: (v) => setState(() => _showOtherSubjectField = v),
+                selectedColor: Colors.white, checkmarkColor: AppColors.primaryLight,
+                backgroundColor: isDark ? Colors.white10 : Colors.grey[100],
+                labelStyle: TextStyle(fontWeight: _showOtherSubjectField ? FontWeight.bold : FontWeight.normal, color: _showOtherSubjectField ? Colors.black : (isDark ? Colors.white70 : Colors.black87)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: _showOtherSubjectField ? AppColors.primaryLight : Colors.transparent, width: _showOtherSubjectField ? 2 : 1)),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ]),
             if (_showOtherSubjectField) ...[
               const SizedBox(height: 16),
               _buildTextField('Précisez la matière', _otherSubjectController, isDark),
@@ -363,16 +423,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, bool isDark, {bool isNumber = false}) {
+  Widget _buildTextField(String label, TextEditingController controller, bool isDark, {bool isNumber = false, bool isPhone = false, IconData? icon}) {
     return TextField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      keyboardType: isNumber ? TextInputType.number : (isPhone ? TextInputType.phone : TextInputType.text),
       style: TextStyle(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.grey[500]),
-        filled: true,
-        fillColor: isDark ? Colors.white10 : Colors.grey[50],
+        labelText: label, labelStyle: TextStyle(color: Colors.grey[500]),
+        filled: true, fillColor: isDark ? Colors.white10 : Colors.grey[50],
+        prefixIcon: icon != null ? Icon(icon, color: Colors.grey[400]) : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
       ),
     );
@@ -389,13 +448,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           border: Border.all(color: isSelected ? AppColors.primaryLight : Colors.transparent, width: 2),
         ),
         alignment: Alignment.center,
-        child: Text(
-          text,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
-          ),
-        ),
+        child: Text(text, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87))),
       ),
     );
   }
@@ -404,21 +457,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     return GestureDetector(
       onTap: () => onTap(text),
       child: Container(
-        width: 50,
-        height: 50,
+        width: 50, height: 50,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : (isDark ? Colors.white10 : Colors.grey[100]),
           shape: BoxShape.circle,
           border: Border.all(color: isSelected ? AppColors.primaryLight : Colors.transparent, width: 2),
         ),
         alignment: Alignment.center,
-        child: Text(
-          text,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
-          ),
-        ),
+        child: Text(text, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87))),
       ),
     );
   }
@@ -426,45 +472,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget _buildInterestCard(String title, String subtitle, bool isDark) {
     final isSelected = _selectedInterests.contains(title);
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            _selectedInterests.remove(title);
-          } else {
-            _selectedInterests.add(title);
-          }
-        });
-      },
+      onTap: () => setState(() => isSelected ? _selectedInterests.remove(title) : _selectedInterests.add(title)),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        width: double.infinity, padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : (isDark ? Colors.white10 : Colors.grey[100]),
           border: Border.all(color: isSelected ? AppColors.primaryLight : Colors.transparent, width: 2),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: isSelected ? Colors.black : (isDark ? Colors.white : Colors.black87),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected ? Colors.black54 : (isDark ? Colors.white60 : Colors.grey[600]),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+        child: Column(children: [
+          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isSelected ? Colors.black : (isDark ? Colors.white : Colors.black87)), textAlign: TextAlign.center),
+          const SizedBox(height: 4),
+          Text(subtitle, style: TextStyle(fontSize: 12, color: isSelected ? Colors.black54 : (isDark ? Colors.white60 : Colors.grey[600])), textAlign: TextAlign.center),
+        ]),
       ),
     );
   }
@@ -472,35 +492,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget _buildSubjectChip(String title, bool isDark) {
     final isSelected = _selectedSubjects.contains(title);
     return FilterChip(
-      label: Text(title),
-      selected: isSelected,
-      onSelected: (bool selected) {
-        setState(() {
-          if (selected) {
-            _selectedSubjects.add(title);
-          } else {
-            _selectedSubjects.remove(title);
-          }
-        });
-      },
-      selectedColor: Colors.white,
-      checkmarkColor: AppColors.primaryLight,
+      label: Text(title), selected: isSelected,
+      onSelected: (s) => setState(() => s ? _selectedSubjects.add(title) : _selectedSubjects.remove(title)),
+      selectedColor: Colors.white, checkmarkColor: AppColors.primaryLight,
       backgroundColor: isDark ? Colors.white10 : Colors.grey[100],
-      labelStyle: TextStyle(
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? AppColors.primaryLight : Colors.transparent,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
+      labelStyle: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? AppColors.primaryLight : Colors.transparent, width: isSelected ? 2 : 1)),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }
 }
-
-
-

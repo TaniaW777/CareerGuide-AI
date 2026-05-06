@@ -18,14 +18,14 @@ class AppColors {
   static const Color textFieldHint = Color(0xFF9CA3AF);
   static const Color searchBarColor = Color(0xFFF3F4F6); // Light grey for search bar
 
-  // Dark Theme
-  static const Color primaryDark = Color(0xFF4D86FF);
-  static const Color accentDark = Color(0xFFF39C12);
-  static const Color secondaryDark = Color(0xFF52B788);
-  static const Color backgroundDark = Color(0xFF0F172A);
-  static const Color surfaceDark = Color(0xFF1E293B);
+  // Dark Theme - Enhanced Premium Navy
+  static const Color primaryDark = Color(0xFF64B5F6);
+  static const Color accentDark = Color(0xFFFFB74D);
+  static const Color secondaryDark = Color(0xFF81C784);
+  static const Color backgroundDark = Color(0xFF090E17); // Deeper rich navy background
+  static const Color surfaceDark = Color(0xFF131B2A); // Elevated surface
   static const Color onPrimaryDark = Colors.white;
   static const Color onSurfaceDark = Colors.white;
-  static const Color borderDark = Color(0xFF334155);
+  static const Color borderDark = Color(0xFF263346); // Subtle border
   static const Color errorDark = Color(0xFFFFB4AB);
 }

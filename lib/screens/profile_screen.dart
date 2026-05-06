@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import 'question_flow_screen.dart';
 import 'career_paths_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -254,6 +255,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Profile actions
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.settings_outlined, color: AppColors.primaryLight),
+                          ),
+                          title: const Text('Paramètres', style: TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: const Text('Gérer votre application et préférences'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.logout, color: Colors.red),
+                          ),
+                          title: const Text('Déconnexion', style: TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: const Text('Retourner à l’écran d’accueil'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                        ),
                       ],
                     ),
                   ),
