@@ -1,29 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import 'question_flow_screen.dart';
 import 'career_paths_screen.dart';
 import 'settings_screen.dart';
+import 'welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool startEditing;
+  const ProfileScreen({super.key, this.startEditing = false});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Mock user data (to be replaced by real persistence later)
-  final Map<String, String> _userData = {
-    'nom': 'Kaboré',
-    'prenom': 'Aminata',
-    'age': '18',
-    'niveau': 'Terminale',
-    'region': 'Centre (Ouagadougou)',
-    'email': 'aminata@example.com',
+  // Real user data from SharedPreferences
+  Map<String, String> _userData = {
+    'nom': '',
+    'prenom': '',
+    'age': '',
+    'niveau': '',
+    'region': '',
+    'email': '',
     'objectif': 'Orientation scolaire',
   };
 
-  final List<String> _interests = ['Sciences', 'Technologie', 'Santé'];
+  List<String> _interests = [];
+  bool _isLoading = true;
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userData = {
+        'nom': prefs.getString('user_nom') ?? 'Kaboré',
+        'prenom': prefs.getString('user_prenom') ?? 'Aminata',
+        'age': prefs.getString('user_age') ?? '18',
+        'niveau': prefs.getString('user_classe') ?? 'Terminale',
+        'region': prefs.getString('user_ville') ?? 'Ouagadougou',
+        'email': prefs.getString('user_email') ?? 'etudiant@example.com',
+        'objectif': prefs.getString('user_objectif') ?? 'Orientation scolaire',
+      };
+      _interests = prefs.getStringList('user_interests') ?? ['Sciences', 'Technologie'];
+      
+      // Update controllers
+      _controllers.forEach((key, controller) {
+        if (_userData.containsKey(key)) {
+          controller.text = _userData[key]!;
+        }
+      });
+      _isLoading = false;
+    });
+  }
 
   // Current recommended sector (influences the background)
   String _recommendedSector = 'Tech'; // Options: 'Tech', 'Agro', 'Health', 'Default'
@@ -34,7 +62,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _controllers = _userData.map((k, v) => MapEntry(k, TextEditingController(text: v)));
+    _isEditing = widget.startEditing;
+    _controllers = {
+      'nom': TextEditingController(),
+      'prenom': TextEditingController(),
+      'age': TextEditingController(),
+      'niveau': TextEditingController(),
+      'region': TextEditingController(),
+      'email': TextEditingController(),
+    };
+    _loadUserData();
   }
 
   @override
@@ -67,17 +104,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       default:
         return LinearGradient(
-          colors: [AppColors.primaryLight, AppColors.primaryLight.withOpacity(0.7)],
+          colors: [AppColors.primaryLight, AppColors.primaryLight.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
     }
   }
 
-  void _saveEdits() {
+  Future<void> _saveEdits() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      for (final k in _userData.keys) {
-        _userData[k] = _controllers[k]!.text;
+      for (final k in _controllers.keys) {
+        if (_userData.containsKey(k)) {
+          _userData[k] = _controllers[k]!.text;
+          // Map internal keys to SharedPreferences keys
+          String prefKey = 'user_$k';
+          if (k == 'region') prefKey = 'user_ville';
+          if (k == 'niveau') prefKey = 'user_classe';
+          prefs.setString(prefKey, _controllers[k]!.text);
+        }
       }
       _isEditing = false;
     });
@@ -88,14 +133,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final subColor = isDark ? Colors.white70 : Colors.grey.shade600;
     final cardColor = isDark ? AppColors.surfaceDark : Colors.white;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 32),
-      child: Column(
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF7F8FA),
+      appBar: AppBar(
+        title: const Text('Mon Profil', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: _recommendedSector == 'Tech' ? const Color(0xFF1A56DB) : AppColors.primaryLight,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 32),
+        child: Column(
         children: [
           // Header Banner
           Container(
@@ -105,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               gradient: _getHeaderGradient(),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 )
@@ -136,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       CircleAvatar(
                         radius: 52,
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         child: const Icon(Icons.person, size: 60, color: Colors.white),
                       ),
                       CircleAvatar(
@@ -156,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -168,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _statBadge('Niveau', _userData['niveau'] ?? '-'),
+                    _statBadge('Niveau', _userData['niveau'] == 'Tle' ? 'Terminale' : (_userData['niveau'] ?? '-')),
                     const SizedBox(width: 20),
                     _statBadge('Région', _userData['region']?.split(' ').first ?? '-'),
                     const SizedBox(width: 20),
@@ -216,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
                     ),
                     child: Column(
                       children: [
@@ -266,7 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
                     ),
                     child: Column(
                       children: [
@@ -274,7 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight.withOpacity(0.1),
+                              color: AppColors.primaryLight.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.settings_outlined, color: AppColors.primaryLight),
@@ -289,7 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
+                              color: Colors.red.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.logout, color: Colors.red),
@@ -297,7 +352,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: const Text('Déconnexion', style: TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: const Text('Retourner à l’écran d’accueil'),
                           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                          onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                          onTap: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.clear();
+                            if (mounted) {
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                                (route) => false,
+                              );
+                            }
+                          },
                         ),
                       ],
                     ),
@@ -311,7 +375,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +396,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   else _interests.remove(interest);
                                 });
                               },
-                              selectedColor: AppColors.primaryLight.withOpacity(0.15),
+                              selectedColor: AppColors.primaryLight.withValues(alpha: 0.15),
                               checkmarkColor: AppColors.primaryLight,
                               labelStyle: TextStyle(
                                 color: isSelected ? AppColors.primaryLight : subColor,
@@ -350,6 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -372,13 +437,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(width: 12),

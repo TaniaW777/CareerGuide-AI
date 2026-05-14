@@ -21,9 +21,10 @@ class SearchBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(isRounded ? 40 : 12),
         boxShadow: [
           BoxShadow(
@@ -32,24 +33,24 @@ class SearchBarWidget extends StatelessWidget {
             offset: const Offset(0, 4),
           )
         ],
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        border: Border.all(color: isDark ? AppColors.borderDark : Colors.grey.shade200, width: 1.5),
       ),
       child: TextField(
         controller: controller,
-        style: const TextStyle(
-          color: Colors.black,
+        style: TextStyle(
+          color: isDark ? AppColors.onSurfaceDark : Colors.black,
           fontWeight: FontWeight.w500,
           fontSize: 14,
         ),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(
-            color: Colors.grey.shade500,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
             fontSize: 14,
           ),
           prefixIcon: Icon(
             prefixIcon,
-            color: AppColors.primaryLight,
+            color: isDark ? AppColors.primaryDark : AppColors.primaryLight,
             size: 22,
           ),
           contentPadding: const EdgeInsets.symmetric(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/theme_provider.dart';
 import 'profile_screen.dart';
 import 'annex_screens.dart';
+import 'welcome_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -67,13 +69,20 @@ class SettingsScreen extends StatelessWidget {
           _sectionHeader('APPARENCE'),
           _buildSettingItem(
             context,
-            'Mode Sombre',
-            Icons.dark_mode_outlined,
+            isDark ? 'Mode sombre' : 'Mode clair',
+            Icons.brightness_6_outlined,
             isDark ? AppColors.primaryLight : Colors.grey,
-            trailing: Switch.adaptive(
-              value: isDark,
-              onChanged: (v) => themeProvider.toggleTheme(),
-              activeColor: AppColors.primaryLight,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(isDark ? 'Sombre' : 'Clair', style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[700], fontWeight: FontWeight.bold)),
+                const SizedBox(width: 10),
+                Switch.adaptive(
+                  value: isDark,
+                  onChanged: (v) => themeProvider.toggleTheme(),
+                  activeColor: AppColors.primaryLight,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
@@ -83,7 +92,7 @@ class SettingsScreen extends StatelessWidget {
             'Modifier mon profil', 
             Icons.person_outline, 
             Colors.blue,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen(startEditing: true))),
           ),
           _buildSettingItem(context, 'Changer de mot de passe', Icons.lock_outline, Colors.orange, onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fonctionnalité bientôt disponible')));
@@ -154,7 +163,16 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           TextButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                  (route) => false,
+                );
+              }
+            },
             child: const Text('Déconnexion', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 40),

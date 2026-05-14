@@ -22,6 +22,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
+  Offset _aiButtonPosition = const Offset(-1, -1);
 
   late AnimationController _pulseController;
   late AnimationController _floatController;
@@ -98,6 +99,7 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Stack(
@@ -106,99 +108,120 @@ class _MainNavigationState extends State<MainNavigation>
             index: _currentIndex,
             children: _pages,
           ),
-          // Floating AI Button
+          // Floating AI Button (Movable)
           Positioned(
-            right: 16,
-            bottom: 24,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_pulseAnimation, _floatAnimation]),
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _floatAnimation.value),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Label chip
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4)),
-                          ],
-                          border: Border.all(color: isDark ? AppColors.primaryDark.withOpacity(0.3) : AppColors.primaryLight.withOpacity(0.2)),
+            left: _aiButtonPosition.dx == -1 ? null : _aiButtonPosition.dx,
+            top: _aiButtonPosition.dy == -1 ? null : _aiButtonPosition.dy,
+            right: _aiButtonPosition.dx == -1 ? 16 : null,
+            bottom: _aiButtonPosition.dy == -1 ? 24 : null,
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  if (_aiButtonPosition.dx == -1) {
+                    // Initial conversion from right/bottom to left/top
+                    _aiButtonPosition = Offset(size.width - 116, size.height - 200); 
+                  }
+                  
+                  double newX = _aiButtonPosition.dx + details.delta.dx;
+                  double newY = _aiButtonPosition.dy + details.delta.dy;
+                  
+                  // Constrain to screen to prevent it from going out of bounds
+                  newX = newX.clamp(0.0, size.width - 100);
+                  newY = newY.clamp(0.0, size.height - 180);
+                  
+                  _aiButtonPosition = Offset(newX, newY);
+                });
+              },
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_pulseAnimation, _floatController.isAnimating ? _floatAnimation : _floatAnimation]),
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _floatAnimation.value),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Label chip
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.surfaceDark : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 10, offset: const Offset(0, 4)),
+                            ],
+                            border: Border.all(color: isDark ? AppColors.primaryDark.withValues(alpha: 0.28) : AppColors.primaryLight.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.smart_toy_outlined, size: 14, color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
+                              const SizedBox(width: 6),
+                              Text('Conseiller IA', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? AppColors.primaryDark : AppColors.primaryLight)),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.smart_toy_outlined, size: 13, color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
-                            const SizedBox(width: 5),
-                            Text('Conseiller IA', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? AppColors.primaryDark : AppColors.primaryLight)),
-                          ],
-                        ),
-                      ),
-                      // The main button
-                      GestureDetector(
-                        onTap: _openAdvisorChat,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Outer pulse glow
-                            Container(
-                              width: 100 + (_pulseAnimation.value * 24),
-                              height: 100 + (_pulseAnimation.value * 24),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    (isDark ? const Color(0xFF6366F1) : AppColors.primaryLight).withOpacity(0.2 * (1 - _pulseAnimation.value)),
-                                    Colors.transparent,
+                        // The main button
+                        GestureDetector(
+                          onTap: _openAdvisorChat,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Outer pulse glow
+                              Container(
+                                width: 100 + (_pulseAnimation.value * 24),
+                                height: 100 + (_pulseAnimation.value * 24),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      (isDark ? AppColors.primaryDark : AppColors.primaryLight).withValues(alpha: 0.2 * (1 - _pulseAnimation.value)),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // Shadow
+                              Container(
+                                width: 86,
+                                height: 86,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(color: (isDark ? AppColors.primaryDark : AppColors.primaryLight).withValues(alpha: 0.4), blurRadius: 28, spreadRadius: 4, offset: const Offset(0, 8)),
                                   ],
                                 ),
                               ),
-                            ),
-                            // Shadow
-                            Container(
-                              width: 86,
-                              height: 86,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(color: (isDark ? const Color(0xFF6366F1) : AppColors.primaryLight).withOpacity(0.4), blurRadius: 28, spreadRadius: 4, offset: const Offset(0, 8)),
-                                ],
-                              ),
-                            ),
-                            // Button body
-                            Container(
-                              width: 84,
-                              height: 84,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: isDark
-                                      ? [const Color(0xFF6366F1), const Color(0xFF8B5CF6)]
-                                      : [AppColors.primaryLight, const Color(0xFF3B82F6)],
+                              // Button body
+                              Container(
+                                width: 84,
+                                height: 84,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: isDark
+                                        ? [AppColors.primaryDark, AppColors.secondaryDark]
+                                        : [AppColors.primaryLight, const Color(0xFF1976D2)],
+                                  ),
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Sparkle icon
+                                    const Icon(Icons.auto_awesome, color: Colors.white, size: 42),
+                                  ],
                                 ),
                               ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  // Sparkle icon
-                                  const Icon(Icons.auto_awesome, color: Colors.white, size: 42),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -208,8 +231,8 @@ class _MainNavigationState extends State<MainNavigation>
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        selectedItemColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
-        unselectedItemColor: isDark ? Colors.white38 : Colors.grey,
+        selectedItemColor: isDark ? AppColors.accentDark : AppColors.primaryLight,
+        unselectedItemColor: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.55) : Colors.grey,
         selectedLabelStyle:
             const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
         unselectedLabelStyle: const TextStyle(fontSize: 10),

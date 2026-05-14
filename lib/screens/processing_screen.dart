@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import '../core/theme/app_colors.dart';
 import 'career_paths_screen.dart';
@@ -30,12 +31,17 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
       }
     });
 
-    Future.delayed(const Duration(seconds: 6), () {
+    Future.delayed(const Duration(seconds: 6), () async {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const CareerPathsScreen()),
-        );
+        final prefs = await SharedPreferences.getInstance();
+        final userLevel = prefs.getString('user_classe') ?? '3ème';
+        
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => CareerPathsScreen(userLevel: userLevel)),
+          );
+        }
       }
     });
   }

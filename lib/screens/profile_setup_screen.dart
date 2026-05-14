@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import 'question_flow_screen.dart';
 
@@ -62,7 +64,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 600),
-            pageBuilder: (_, __, ___) => const QuestionFlowScreen(),
+            pageBuilder: (_, __, ___) => QuestionFlowScreen(selectedClasse: _selectedClasse ?? '3ème'),
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(
                 opacity: animation,
@@ -132,9 +134,40 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
       setState(() => _currentStep++);
     } else {
       // Trigger transition animation then navigate
-      setState(() => _isTransitioning = true);
-      _transitionController.forward();
+      _saveProfileAndNavigate();
     }
+  }
+
+  Future<void> _saveProfileAndNavigate() async {
+    setState(() => _isTransitioning = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_nom', _nomController.text.trim());
+      await prefs.setString('user_prenom', _prenomController.text.trim());
+      await prefs.setString('user_age', _ageController.text.trim());
+      await prefs.setString('user_contact', _contactController.text.trim());
+      await prefs.setString('user_classe', _selectedClasse ?? '3ème');
+      await prefs.setString('user_ville', _selectedVille ?? '');
+      
+      if (_selectedClasse == 'Autre') {
+        await prefs.setString('user_classe_autre', _otherClasseController.text.trim());
+      }
+      
+      if (_selectedClasse == 'Tle') {
+        await prefs.setString('user_serie', _selectedSerie ?? '');
+      }
+
+      // Save interests
+      await prefs.setStringList('user_interests', _selectedInterests.toList());
+      // Save subjects
+      await prefs.setStringList('user_subjects', _selectedSubjects.toList());
+
+    } catch (e) {
+      debugPrint('Error saving profile: $e');
+    }
+
+    _transitionController.forward();
   }
 
   void _showError(String msg) {
@@ -244,13 +277,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
                           width: 50, height: 50,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.9)),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withValues(alpha: 0.9)),
                           ),
                         ),
                         const SizedBox(height: 24),
                         const Text('Préparation du questionnaire IA...', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
-                        Text('Un instant s\'il vous plaît', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14)),
+                        Text('Un instant s\'il vous plaît', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
                       ],
                     ),
                   ),
@@ -276,9 +309,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
             const SizedBox(height: 6),
             Text('Parle-nous un peu de toi pour commencer.', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
             const SizedBox(height: 28),
-            _buildTextField('Nom', _nomController, isDark, icon: Icons.badge_outlined),
+            _buildTextField('Nom', _nomController, isDark, icon: Icons.badge_outlined, isLettersOnly: true),
             const SizedBox(height: 16),
-            _buildTextField('Prénom', _prenomController, isDark, icon: Icons.person_outline),
+            _buildTextField('Prénom', _prenomController, isDark, icon: Icons.person_outline, isLettersOnly: true),
             const SizedBox(height: 16),
             _buildTextField('Âge', _ageController, isDark, isNumber: true, icon: Icons.cake_outlined),
             const SizedBox(height: 16),
@@ -344,6 +377,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
           ],
         );
       case 3:
+        // Different interests based on selected class
+        final bool isTle = _selectedClasse == 'Tle';
+        final interestsForClasse = isTle
+            ? [
+                {'title': 'Sciences & Ingénierie', 'subtitle': 'Recherche, Technologies avancées et Innovation'},
+                {'title': 'Médecine & Santé', 'subtitle': 'Médecine, Pharmacie, Biologie et Soins'},
+                {'title': 'Économie & Gestion', 'subtitle': 'Finance, Comptabilité, Management et Commerce'},
+                {'title': 'Droit & Sciences Politiques', 'subtitle': 'Juridique, Relations internationales et Diplomatie'},
+                {'title': 'Informatique & Numérique', 'subtitle': 'Développement, IA, Cybersécurité et Data Science'},
+                {'title': 'Art, Lettres & Communication', 'subtitle': 'Journalisme, Design, Littérature et Médias'},
+              ]
+            : [
+                {'title': 'Science et Technologie', 'subtitle': 'Innovation, Recherche et Informatique'},
+                {'title': 'Commerce et Gestion', 'subtitle': 'Entreprenariat, Marketing et Finance'},
+                {'title': 'Santé et Bien Être', 'subtitle': 'Médecine, Soin et Bien être'},
+                {'title': 'Art et Culture', 'subtitle': 'Design, Musique et Patrimoine'},
+              ];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -351,22 +401,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
             const SizedBox(height: 12),
             Text('Quels sont tes centres d\'intérêts ?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
             const SizedBox(height: 6),
-            Text('Sélectionne les domaines qui t\'attirent le plus.', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+            Text(
+              isTle
+                  ? 'En Terminale, précise les domaines d\'études supérieures qui t\'attirent.'
+                  : 'Sélectionne les domaines qui t\'attirent le plus.',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
             const SizedBox(height: 24),
-            _buildInterestCard('Science et Technologie', 'Innovation, Recherche et Informatique', isDark),
-            const SizedBox(height: 12),
-            _buildInterestCard('Commerce et Gestion', 'Entreprenariat, Marketing et Finance', isDark),
-            const SizedBox(height: 12),
-            _buildInterestCard('Santé et Bien Être', 'Médecine, Soin et Bien être', isDark),
-            const SizedBox(height: 12),
-            _buildInterestCard('Art et Culture', 'Design, Musique et Patrimoine', isDark),
-            const SizedBox(height: 12),
+            ...interestsForClasse.map((interest) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildInterestCard(interest['title']!, interest['subtitle']!, isDark),
+            )),
             GestureDetector(
               onTap: () => setState(() => _showOtherInterestField = !_showOtherInterestField),
               child: Container(
                 width: double.infinity, padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _showOtherInterestField ? AppColors.primaryLight.withOpacity(0.1) : (isDark ? Colors.white10 : Colors.grey[100]),
+                  color: _showOtherInterestField ? AppColors.primaryLight.withValues(alpha: 0.1) : (isDark ? Colors.white10 : Colors.grey[100]),
                   border: Border.all(color: _showOtherInterestField ? AppColors.primaryLight : Colors.transparent, width: 2),
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -380,25 +431,61 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
           ],
         );
       default:
+        final bool isTleStep4 = _selectedClasse == 'Tle';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(Icons.menu_book_outlined, size: 40, color: AppColors.primaryLight),
             const SizedBox(height: 12),
-            Text('Quelles matières préfères-tu ?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            Text(
+              isTleStep4 ? 'Quelles matières maîtrises-tu le mieux ?' : 'Quelles matières préfères-tu ?',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              isTleStep4
+                  ? 'Indique tes points forts pour affiner ton orientation post-bac.'
+                  : 'Sélectionne les matières que tu aimes.',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
             const SizedBox(height: 24),
-            Text('Sciences', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
-            const SizedBox(height: 12),
-            Wrap(spacing: 12, runSpacing: 12, children: [
-              _buildSubjectChip('Mathématiques', isDark), _buildSubjectChip('Physique-Chimie', isDark),
-              _buildSubjectChip('SVT', isDark), _buildSubjectChip('Informatique', isDark),
-            ]),
-            const SizedBox(height: 20),
-            Text('Lettres & Langues', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
-            const SizedBox(height: 12),
-            Wrap(spacing: 12, runSpacing: 12, children: [
-              _buildSubjectChip('Français', isDark), _buildSubjectChip('Anglais', isDark), _buildSubjectChip('Philosophie', isDark),
-            ]),
+            if (isTleStep4) ...[
+              // Tle: more detailed subject categories
+              Text('Sciences Exactes', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
+              const SizedBox(height: 12),
+              Wrap(spacing: 12, runSpacing: 12, children: [
+                _buildSubjectChip('Mathématiques', isDark), _buildSubjectChip('Physique-Chimie', isDark),
+                _buildSubjectChip('SVT', isDark), _buildSubjectChip('Informatique', isDark),
+              ]),
+              const SizedBox(height: 20),
+              Text('Sciences Humaines', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
+              const SizedBox(height: 12),
+              Wrap(spacing: 12, runSpacing: 12, children: [
+                _buildSubjectChip('Philosophie', isDark), _buildSubjectChip('Histoire-Géo', isDark),
+                _buildSubjectChip('Économie', isDark), _buildSubjectChip('Sociologie', isDark),
+              ]),
+              const SizedBox(height: 20),
+              Text('Langues & Communication', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
+              const SizedBox(height: 12),
+              Wrap(spacing: 12, runSpacing: 12, children: [
+                _buildSubjectChip('Français', isDark), _buildSubjectChip('Anglais', isDark),
+                _buildSubjectChip('Allemand', isDark), _buildSubjectChip('Espagnol', isDark),
+              ]),
+            ] else ...[
+              // 3ème: simpler subject categories
+              Text('Sciences', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
+              const SizedBox(height: 12),
+              Wrap(spacing: 12, runSpacing: 12, children: [
+                _buildSubjectChip('Mathématiques', isDark), _buildSubjectChip('Physique-Chimie', isDark),
+                _buildSubjectChip('SVT', isDark), _buildSubjectChip('Informatique', isDark),
+              ]),
+              const SizedBox(height: 20),
+              Text('Lettres & Langues', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
+              const SizedBox(height: 12),
+              Wrap(spacing: 12, runSpacing: 12, children: [
+                _buildSubjectChip('Français', isDark), _buildSubjectChip('Anglais', isDark), _buildSubjectChip('Philosophie', isDark),
+              ]),
+            ],
             const SizedBox(height: 20),
             Text('Autres', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[500])),
             const SizedBox(height: 12),
@@ -423,16 +510,31 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
     }
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, bool isDark, {bool isNumber = false, bool isPhone = false, IconData? icon}) {
+  Widget _buildTextField(String label, TextEditingController controller, bool isDark, {bool isNumber = false, bool isPhone = false, bool isLettersOnly = false, IconData? icon}) {
+    // Build input formatters based on field type
+    List<TextInputFormatter> formatters = [];
+    if (isLettersOnly) {
+      // Only allow letters (including accented characters), spaces, and hyphens
+      formatters.add(FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÿ\s\-\']")));
+    } else if (isNumber) {
+      formatters.add(FilteringTextInputFormatter.digitsOnly);
+    } else if (isPhone) {
+      // Allow digits, +, spaces, and hyphens for phone numbers
+      formatters.add(FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-\s]')));
+    }
+
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : (isPhone ? TextInputType.phone : TextInputType.text),
+      inputFormatters: formatters.isNotEmpty ? formatters : null,
       style: TextStyle(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         labelText: label, labelStyle: TextStyle(color: Colors.grey[500]),
         filled: true, fillColor: isDark ? Colors.white10 : Colors.grey[50],
         prefixIcon: icon != null ? Icon(icon, color: Colors.grey[400]) : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+        helperText: isLettersOnly ? 'Lettres uniquement' : (isNumber ? 'Chiffres uniquement' : null),
+        helperStyle: TextStyle(color: Colors.grey[400], fontSize: 11),
       ),
     );
   }

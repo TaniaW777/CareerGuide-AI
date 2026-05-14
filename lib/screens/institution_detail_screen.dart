@@ -19,14 +19,22 @@ class InstitutionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.backgroundDark : Colors.white;
+    final cardBg = isDark ? AppColors.surfaceDark : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final secondaryColor = isDark ? Colors.white70 : Colors.grey;
+    final appBarColor = isDark ? AppColors.primaryDark : AppColors.primaryLight;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
-            backgroundColor: AppColors.primaryLight,
+            backgroundColor: appBarColor,
+            iconTheme: const IconThemeData(color: Colors.white),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () {
@@ -53,87 +61,58 @@ class InstitutionDetailScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _tag(type, type == 'Public' ? Colors.blue : Colors.green),
+                      _tag(type, type == 'Public' ? Colors.blue : Colors.green, isDark),
                       const SizedBox(width: 8),
-                      _tag(category, AppColors.primaryLight),
+                      _tag(category, AppColors.primaryLight, isDark),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor)),
                   const SizedBox(height: 8),
                   Row(children: [
-                    const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                    Icon(Icons.location_on_outlined, size: 16, color: secondaryColor),
                     const SizedBox(width: 6),
-                    Text(location, style: const TextStyle(color: Colors.grey)),
+                    Expanded(child: Text(location, style: TextStyle(color: secondaryColor, fontSize: 13))),
                   ]),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const Icon(Icons.star_half, color: Colors.amber, size: 16),
-                    const SizedBox(width: 8),
-                    const Text('4.5 / 5', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ]),
-                  const SizedBox(height: 24),
-                  const Divider(),
                   const SizedBox(height: 16),
-                  _sectionTitle('À propos'),
+                  Divider(color: isDark ? AppColors.borderDark : Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  _sectionTitle('À propos', Icons.info_outline, isDark),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Cet établissement offre une formation de qualité dans les domaines techniques et professionnels. Reconnu par le Ministère de l\'Éducation Nationale du Burkina Faso, il accueille chaque année plusieurs centaines d\'étudiants.',
-                    style: TextStyle(fontSize: 15, height: 1.7, color: Colors.black87),
+                    style: TextStyle(fontSize: 15, height: 1.7, color: secondaryColor),
                   ),
                   const SizedBox(height: 24),
-                  _sectionTitle('Filières disponibles'),
+                  _sectionTitle('Filières disponibles', Icons.library_books_outlined, isDark),
                   const SizedBox(height: 12),
                   ...[
                     'Génie Logiciel',
                     'Électronique & Automatisme',
                     'Gestion des Entreprises',
                     'Agriculture & Agroalimentaire',
-                  ].map((f) => _filiereItem(f)),
+                  ].map((f) => _filiereItem(f, isDark)),
                   const SizedBox(height: 24),
-                  _sectionTitle('Informations pratiques'),
+                  _sectionTitle('Informations pratiques', Icons.contact_support_outlined, isDark),
                   const SizedBox(height: 12),
-                  _infoItem(Icons.attach_money, 'Frais de scolarité', '150 000 - 400 000 FCFA / an'),
-                  _infoItem(Icons.calendar_today, 'Rentrée', 'Octobre 2024'),
-                  _infoItem(Icons.phone, 'Contact', '+226 25 33 00 00'),
-                  _infoItem(Icons.email_outlined, 'Email', 'info@etablissement.bf'),
+                  _infoItem(Icons.attach_money, 'Frais de scolarité', '150 000 - 400 000 FCFA / an', isDark),
+                  _infoItem(Icons.calendar_today, 'Rentrée', 'Octobre 2024', isDark),
+                  _infoItem(Icons.phone, 'Contact', '+226 25 33 00 00', isDark),
+                  _infoItem(Icons.email_outlined, 'Email', 'info@etablissement.bf', isDark),
                   const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.share_outlined),
-                          label: const Text('Partager'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                        ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: Icon(Icons.share_outlined, color: appBarColor),
+                      label: Text('Partager', style: TextStyle(color: appBarColor)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: appBarColor),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        backgroundColor: cardBg,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => ApplicationFormScreen(institutionName: name)),
-                          ),
-                          icon: const Icon(Icons.send_outlined),
-                          label: const Text('Postuler maintenant'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryLight,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -144,46 +123,52 @@ class InstitutionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _tag(String text, Color color) {
+  Widget _tag(String text, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: isDark ? color.withValues(alpha: 0.18) : color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 
-  Widget _sectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold));
+  Widget _sectionTitle(String title, IconData icon, bool isDark) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
+        const SizedBox(width: 8),
+        Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+      ],
+    );
   }
 
-  Widget _filiereItem(String name) {
+  Widget _filiereItem(String name, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_outline, color: AppColors.primaryLight, size: 18),
+          Icon(Icons.check_circle_outline, color: isDark ? AppColors.primaryDark : AppColors.primaryLight, size: 18),
           const SizedBox(width: 10),
-          Text(name, style: const TextStyle(fontSize: 15)),
+          Text(name, style: TextStyle(fontSize: 15, color: isDark ? Colors.white70 : Colors.black87)),
         ],
       ),
     );
   }
 
-  Widget _infoItem(IconData icon, String label, String value) {
+  Widget _infoItem(IconData icon, String label, String value, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.primaryLight),
+          Icon(icon, size: 18, color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              Text(label, style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.grey)),
+              Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black)),
             ],
           ),
         ],
@@ -215,9 +200,16 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.backgroundDark : Colors.white;
+    final cardBg = isDark ? AppColors.surfaceDark : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final secondaryColor = isDark ? Colors.white70 : Colors.grey;
+    final surfaceBorder = isDark ? AppColors.borderDark : Colors.grey.shade300;
+
     if (_submitted) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -233,18 +225,18 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                   child: const Icon(Icons.check_circle, color: Colors.green, size: 72),
                 ),
                 const SizedBox(height: 28),
-                const Text('Candidature envoyée !', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                Text('Candidature envoyée !', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
                 const SizedBox(height: 12),
                 Text(
                   'Votre dossier pour ${widget.institutionName} a été transmis. Vous recevrez une réponse dans les 5 à 10 jours ouvrables.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, color: Colors.grey, height: 1.6),
+                  style: TextStyle(fontSize: 15, color: secondaryColor, height: 1.6),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context)..pop()..pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryLight,
+                    backgroundColor: AppColors.primaryDark,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -259,11 +251,11 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: const Text('Formulaire de candidature'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: cardBg,
+        foregroundColor: textColor,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -276,61 +268,82 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withValues(alpha: 0.08),
+                  color: isDark ? AppColors.primaryDark.withValues(alpha: 0.16) : AppColors.primaryLight.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.school, color: AppColors.primaryLight),
+                    Icon(Icons.school, color: isDark ? AppColors.onPrimaryDark : AppColors.primaryLight),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         widget.institutionName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textColor),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 28),
-              _label('Nom complet'),
+              _label('Nom complet', isDark),
               const SizedBox(height: 8),
-              _field('Votre nom et prénom', Icons.person_outline, validator: (v) => v!.isEmpty ? 'Requis' : null),
+              _field('Votre nom et prénom', Icons.person_outline, isDark, validator: (v) => v!.isEmpty ? 'Requis' : null),
               const SizedBox(height: 18),
-              _label('Email de contact'),
+              _label('Email de contact', isDark),
               const SizedBox(height: 8),
-              _field('votremail@exemple.com', Icons.email_outlined, validator: (v) => v!.isEmpty ? 'Requis' : null),
+              _field('votremail@exemple.com', Icons.email_outlined, isDark, validator: (v) => v!.isEmpty ? 'Requis' : null),
               const SizedBox(height: 18),
-              _label('Numéro de téléphone'),
+              _label('Numéro de téléphone', isDark),
               const SizedBox(height: 8),
-              _field('+226 XX XX XX XX', Icons.phone_outlined),
+              _field('+226 XX XX XX XX', Icons.phone_outlined, isDark),
               const SizedBox(height: 18),
-              _label('Filière souhaitée'),
+              _label('Filière souhaitée', isDark),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _selectedFiliere,
-                style: const TextStyle(color: Colors.black, fontSize: 15),
-                decoration: const InputDecoration(
-                  fillColor: Colors.white,
+                style: TextStyle(color: textColor, fontSize: 15),
+                decoration: InputDecoration(
+                  fillColor: cardBg,
                   filled: true,
                   prefixIcon: Icon(Icons.book_outlined, color: AppColors.primaryLight),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: surfaceBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: AppColors.primaryDark, width: 2),
+                  ),
                 ),
-                hint: const Text('Sélectionner une filière'),
-                items: _filieres.map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+                hint: Text('Sélectionner une filière', style: TextStyle(color: secondaryColor)),
+                items: _filieres.map((f) => DropdownMenuItem(value: f, child: Text(f, style: TextStyle(color: textColor)))).toList(),
                 onChanged: (v) => setState(() => _selectedFiliere = v),
                 validator: (v) => v == null ? 'Veuillez choisir une filière' : null,
               ),
               const SizedBox(height: 18),
-              _label('Message de motivation'),
+              _label('Message de motivation', isDark),
               const SizedBox(height: 8),
               TextFormField(
                 maxLines: 4,
-                style: const TextStyle(color: Colors.black),
-                decoration: const InputDecoration(
+                style: TextStyle(color: textColor),
+                decoration: InputDecoration(
                   hintText: 'Expliquez votre motivation...',
-                  fillColor: Colors.white,
+                  hintStyle: TextStyle(color: secondaryColor),
+                  fillColor: cardBg,
                   filled: true,
                   alignLabelWithHint: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: surfaceBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: surfaceBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: AppColors.primaryDark, width: 2),
+                  ),
                 ),
               ),
               const SizedBox(height: 36),
@@ -343,7 +356,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                 icon: const Icon(Icons.send),
                 label: const Text('ENVOYER MA CANDIDATURE'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
+                  backgroundColor: AppColors.primaryDark,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -357,17 +370,30 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     );
   }
 
-  Widget _label(String text) => Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14));
+  Widget _label(String text, bool isDark) => Text(text, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: isDark ? Colors.white : Colors.black));
 
-  Widget _field(String hint, IconData icon, {String? Function(String?)? validator}) {
+  Widget _field(String hint, IconData icon, bool isDark, {String? Function(String?)? validator}) {
     return TextFormField(
-      style: const TextStyle(color: Colors.black),
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
-        fillColor: Colors.white,
+        hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
+        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
         filled: true,
         prefixIcon: Icon(icon, color: AppColors.primaryLight),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: isDark ? AppColors.borderDark : Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: isDark ? AppColors.borderDark : Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.primaryDark, width: 2),
+        ),
       ),
     );
   }

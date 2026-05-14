@@ -140,37 +140,60 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
 
   Widget _buildChatBubble(String text, bool isUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(16),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-        decoration: BoxDecoration(
-          color: isUser ? AppColors.primaryLight : (isDark ? AppColors.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
-            bottomRight: isUser ? Radius.zero : const Radius.circular(20),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isUser) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: isDark ? AppColors.primaryDark.withValues(alpha: 0.2) : AppColors.primaryLight.withValues(alpha: 0.1),
+              child: Icon(Icons.auto_awesome, size: 14, color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
+            ),
+            const SizedBox(width: 8),
           ],
-          border: isUser ? null : Border.all(color: isDark ? AppColors.borderDark : Colors.grey[100]!),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
-            height: 1.5,
-            fontSize: 15,
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+              decoration: BoxDecoration(
+                color: isUser ? AppColors.primaryLight : (isDark ? AppColors.surfaceDark : Colors.white),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
+                  bottomRight: isUser ? Radius.zero : const Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+                border: isUser ? null : Border.all(color: isDark ? AppColors.borderDark : Colors.grey[100]!),
+              ),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                  height: 1.5,
+                  fontSize: 15,
+                ),
+              ),
+            ),
           ),
-        ),
+          if (isUser) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+              child: const Icon(Icons.person_rounded, size: 16, color: AppColors.primaryLight),
+            ),
+          ],
+        ],
       ),
     );
   }

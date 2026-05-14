@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import 'institution_detail_screen.dart';
 import 'annex_screens.dart';
+import 'notifications_screen.dart';
 
 class InstitutionsScreen extends StatefulWidget {
   const InstitutionsScreen({super.key});
@@ -15,6 +17,20 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
   String _selectedType = 'Tous'; // Public, Privé
   String _selectedCategory = 'Tous'; // Lycée, Université, Institut
   String _selectedLevel = 'Tous'; // 3ème, Terminale, etc.
+  String _userLevel = '3ème';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserLevel();
+  }
+
+  Future<void> _loadUserLevel() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userLevel = prefs.getString('user_classe') ?? '3ème';
+    });
+  }
 
   final List<String> _types = ['Tous', 'Public', 'Privé'];
   final List<String> _categories = ['Tous', 'Lycée', 'Université', 'Institut'];
@@ -35,6 +51,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       'category': 'Université',
       'type': 'Public',
       'level': 'Post-Bac',
+      'reason': 'Choisie pour sa taille, sa réputation et ses filières clés en technologies et sciences sociales.',
       'image': 'https://images.unsplash.com/photo-1562774053-701939374585?w=500&auto=format&fit=crop&q=60',
     },
     {
@@ -43,6 +60,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       'category': 'Institut',
       'type': 'Privé',
       'level': 'Terminale',
+      'reason': 'Bien adapté aux profils techniques qui cherchent une formation rapide et professionnalisante.',
       'image': 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&auto=format&fit=crop&q=60',
     },
     {
@@ -51,6 +69,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       'category': 'Lycée',
       'type': 'Public',
       'level': '3ème',
+      'reason': 'Tout proche de ton secteur, ce lycée est idéal pour une orientation technique et professionnelle après le BEPC.',
       'image': 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=500&auto=format&fit=crop&q=60',
     },
     {
@@ -59,6 +78,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       'category': 'Lycée',
       'type': 'Public',
       'level': '3ème',
+      'reason': 'Fort en sciences, il convient aux élèves intéressés par les séries C et D avec un bon encadrement pédagogique.',
       'image': 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=500&auto=format&fit=crop&q=60',
     },
     {
@@ -67,6 +87,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       'category': 'Université',
       'type': 'Privé',
       'level': 'Terminale',
+      'reason': 'Un établissement privé moderne reconnu pour ses filières en gestion et en droit.',
       'image': 'https://images.unsplash.com/photo-1525921429624-479b6a29d84c?w=500&auto=format&fit=crop&q=60',
     },
     {
@@ -75,6 +96,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
       'category': 'Institut',
       'type': 'Public',
       'level': '3ème',
+      'reason': 'Une option solide pour des diplômes professionnels courts et une insertion rapide sur le marché local.',
       'image': 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=500&auto=format&fit=crop&q=60',
     },
   ];
@@ -186,7 +208,14 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
             foregroundColor: isDark ? Colors.white : Colors.black,
             title: Row(
               children: [
-                Image.asset('assets/images/logo.png', height: 28, errorBuilder: (c, e, s) => const Icon(Icons.school, size: 28)),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.school_rounded, color: AppColors.primaryLight, size: 20),
+                ),
                 const SizedBox(width: 10),
                 const Text('Établissements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               ],
@@ -194,8 +223,8 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
             automaticallyImplyLeading: false,
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_none),
-                onPressed: () {},
+                icon: const Icon(Icons.notifications_none_rounded),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
               ),
             ],
           ),
@@ -210,18 +239,20 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+                        boxShadow: [BoxShadow(color: isDark ? Colors.black.withValues(alpha: 0.24) : Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
+                        border: Border.all(color: isDark ? AppColors.borderDark : Colors.transparent),
                       ),
                       child: TextField(
                         style: TextStyle(color: isDark ? Colors.white : Colors.black),
                         onChanged: (v) => setState(() => _searchQuery = v),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Rechercher une école...',
+                          hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-                          prefixIcon: Icon(Icons.search, color: Colors.grey),
-                          contentPadding: EdgeInsets.symmetric(vertical: 14),
+                          prefixIcon: Icon(Icons.search, color: isDark ? Colors.white60 : Colors.grey),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
@@ -263,7 +294,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.school, color: Colors.white, size: 26),
@@ -303,18 +334,18 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.accentLight.withOpacity(0.3)),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+                  border: Border.all(color: isDark ? AppColors.accentDark.withValues(alpha: 0.2) : AppColors.accentLight.withValues(alpha: 0.3)),
+                  boxShadow: [BoxShadow(color: isDark ? Colors.black.withValues(alpha: 0.20) : Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.accentLight.withOpacity(0.1),
+                        color: isDark ? AppColors.accentDark.withValues(alpha: 0.18) : AppColors.accentLight.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.business, color: AppColors.accentLight, size: 22),
+                      child: Icon(Icons.business, color: isDark ? AppColors.accentDark : AppColors.accentLight, size: 22),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -323,7 +354,12 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                         children: [
                           Text('Recommandations pour vous', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black)),
                           const SizedBox(height: 3),
-                          const Text('Institut privé · Localisation proche', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(
+                            _userLevel == '3ème' 
+                              ? 'Lycées techniques · Orientation BEPC' 
+                              : 'Universités publiques · Inscriptions Bacheliers',
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
                         ],
                       ),
                     ),
@@ -346,18 +382,30 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                     const SizedBox(width: 8),
                     ..._categories.map((f) {
                       final isActive = f == _selectedCategory;
+                      IconData categoryIcon = Icons.category_outlined;
+                      if (f == 'Lycée') categoryIcon = Icons.school_outlined;
+                      if (f == 'Université') categoryIcon = Icons.account_balance_outlined;
+                      if (f == 'Institut') categoryIcon = Icons.architecture_outlined;
+                      if (f == 'Tous') categoryIcon = Icons.grid_view_rounded;
+
                       return GestureDetector(
                         onTap: () => setState(() => _selectedCategory = f),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                           decoration: BoxDecoration(
                             color: isActive ? AppColors.primaryLight : cardColor,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: isActive ? AppColors.primaryLight : Colors.grey.shade200),
+                            border: Border.all(color: isActive ? AppColors.primaryLight : (isDark ? AppColors.borderDark : Colors.grey.shade200)),
                           ),
-                          child: Text(f, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)),
+                          child: Row(
+                            children: [
+                              Icon(categoryIcon, size: 14, color: isActive ? Colors.white : Colors.grey),
+                              const SizedBox(width: 6),
+                              Text(f, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
                         ),
                       );
                     }),
@@ -392,6 +440,7 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
   }
 
   Widget _buildCard(BuildContext context, Map<String, String> inst, Color cardColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final type = inst['type']!;
     final typeColor = type == 'Public' ? Colors.blue : Colors.green;
 
@@ -412,7 +461,8 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4))],
+          border: Border.all(color: isDark ? AppColors.borderDark : Colors.transparent),
+          boxShadow: [BoxShadow(color: isDark ? Colors.black.withValues(alpha: 0.20) : Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,9 +481,9 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.school_outlined, color: Colors.grey.withOpacity(0.5), size: 40),
+                      Icon(Icons.school_outlined, color: isDark ? Colors.white54 : Colors.grey.withValues(alpha: 0.5), size: 40),
                       const SizedBox(height: 8),
-                      Text('Image non disponible', style: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 12)),
+                      Text('Image non disponible', style: TextStyle(color: isDark ? Colors.white54 : Colors.grey.withValues(alpha: 0.5), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -455,21 +505,49 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                         ),
                         child: Text(type, style: TextStyle(color: typeColor, fontWeight: FontWeight.bold, fontSize: 10)),
                       ),
-                      Row(children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const SizedBox(width: 3),
-                        const Text('4.5', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                      ]),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Text(inst['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 4),
+                  Text(inst['name']!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : Colors.black)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.surfaceDark : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.category_outlined, size: 12, color: isDark ? Colors.white70 : Colors.black54),
+                            const SizedBox(width: 4),
+                            Text(inst['category']!, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 10)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Row(children: [
-                    const Icon(Icons.location_on_outlined, size: 13, color: Colors.grey),
+                    Icon(Icons.location_on_outlined, size: 13, color: isDark ? Colors.white60 : Colors.grey),
                     const SizedBox(width: 4),
-                    Text(inst['location']!, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Expanded(child: Text(inst['location']!, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 12), overflow: TextOverflow.ellipsis)),
                   ]),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.lightbulb_outline, size: 14, color: isDark ? AppColors.primaryLight : AppColors.primaryLight),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          inst['reason'] ?? 'Suggestion basée sur ton profil et les filières proposées.',
+                          style: TextStyle(color: isDark ? Colors.white70 : Colors.grey.shade700, fontSize: 12, height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 14),
                   Row(
                     children: [
@@ -487,24 +565,10 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 11),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            side: BorderSide(color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
+                            foregroundColor: isDark ? Colors.white70 : AppColors.primaryLight,
                           ),
                           child: const Text('Détails'),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => ApplicationFormScreen(institutionName: inst['name']!)),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryLight,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 11),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Text('Postuler'),
                         ),
                       ),
                     ],

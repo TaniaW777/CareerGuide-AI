@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'welcome_screen.dart';
-import '../core/theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,7 +11,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -27,16 +24,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.0, 0.8, curve: Curves.easeIn),
-      ),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
       ),
     );
 
@@ -67,55 +54,23 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryLight,
+      backgroundColor: Colors.white, // Using white background for the logo as in Image 2
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
             return FadeTransition(
               opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Column(
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 250, // Assuming a good size for the logo
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.school_rounded,
-                        size: 80,
-                        color: AppColors.primaryLight,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'CareerGuide AI',
-                      style: GoogleFonts.workSans(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Votre boussole intelligente',
-                      style: GoogleFonts.workSans(
-                        fontSize: 18,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
+                    Icon(Icons.image_not_supported, size: 80, color: Colors.black26),
+                    SizedBox(height: 10),
+                    Text('Veuillez ajouter logo.png\ndans assets/images/', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
                   ],
                 ),
               ),
