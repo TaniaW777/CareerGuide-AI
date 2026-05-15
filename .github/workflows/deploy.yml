@@ -27,7 +27,8 @@ jobs:
         run: |
           flutter build web \
             --base-href=/CareerGuide-AI/ \
-            --release
+            --release \
+            --pwa-strategy none
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
