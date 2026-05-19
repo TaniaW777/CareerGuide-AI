@@ -118,3 +118,23 @@ mobile/.packages
 # OS
 .DS_Store
 Thumbs.db
+# Python
+__pycache__/
+*.pyc
+venv/
+backend/venv/
+
+# models
+models/
+backend/models/
+*.task
+*.tflite
+
+# env
+.env
+
+# flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+build/
