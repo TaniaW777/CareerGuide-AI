@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Histoire‑Philosophie",
+    "description": "Études approfondies de l'histoire, de la philosophie et des sciences humaines, préparant aux carrières de chercheur, enseignant ou conservateur.",
+    "category": "Humanities"
+  },
+  {
+    "name": "Architecture",
+    "description": "Conception et réalisation de bâtiments et d'espaces urbains, incluant design, ingénierie et durabilité.",
+    "category": "Engineering"
+  },
+  {
+    "name": "Artiste‑Créatif",
+    "description": "Développement de compétences artistiques et visuelles pour les carrières en arts plastiques, digital, et media.",
+    "category": "Arts"
+  },
+  {
+    "name": "Testeur‑Logiciel",
+    "description": "Analyse et validation de la qualité des applications logicielles, assurant la robustesse et la conformité aux exigences.",
+    "category": "IT"
+  },
+  {
+    "name": "Médecine & Santé",
+    "description": "Formation médicale complète préparant aux professions de santé, incluant la recherche clinique et la pratique hospitalière.",
+    "category": "Health"
+  },
+  {
+    "name": "Génie Logiciel & IA",
+    "description": "Développement de logiciels, intelligence artificielle et systèmes informatiques avancés.",
+    "category": "Technology"
+  }
+]

@@ -101,30 +101,18 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 48),
                 
                 // Button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileSetupScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F52BA), // Deep blue
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Commencer',
-                    style: TextStyle(
-                      fontSize: 18, 
-                      fontWeight: FontWeight.bold,
-                    ),
+                SizedBox(
+                  width: size.width * 0.7, // Ajustement de la largeur (70% de l'écran)
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileSetupScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Commencer'),
                   ),
                 ),
                 
@@ -133,8 +121,6 @@ class WelcomeScreen extends StatelessWidget {
                 // Se connecter link
                 GestureDetector(
                   onTap: () {
-                    // Navigate to the main application directly or a login screen
-                    // Currently using MainNavigation as a placeholder for logged in state
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -148,18 +134,18 @@ class WelcomeScreen extends StatelessWidget {
                       Text(
                         'Déjà inscrit ? ',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6) ?? Colors.grey[600],
                           fontSize: 14,
                         ),
                       ),
-                      const Text(
+                      Text(
                         'Se connecter',
                         style: TextStyle(
-                          color: Color(0xFF0F52BA),
+                          color: Theme.of(context).colorScheme.primary,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline,
-                          decorationColor: Color(0xFF0F52BA),
+                          decorationColor: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ],

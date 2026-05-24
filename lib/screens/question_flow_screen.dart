@@ -224,20 +224,20 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
                     const SizedBox(height: 16),
 
                     // Navigation buttons
-                    Row(
+                    Column(
                       children: [
                         if (_currentStep > 0)
-                          Expanded(
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.7,
                             child: OutlinedButton.icon(
                               onPressed: () => setState(() => _currentStep--),
                               icon: const Icon(Icons.arrow_back),
                               label: const Text('PRÉCÉDENT'),
-                              style: OutlinedButton.styleFrom(foregroundColor: AppColors.primaryLight, side: const BorderSide(color: AppColors.primaryLight), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                             ),
                           ),
-                        if (_currentStep > 0) const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
+                        if (_currentStep > 0) const SizedBox(height: 12),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.7,
                           child: ElevatedButton.icon(
                             onPressed: () {
                               if (_questions[_currentStep].selectedIndex == null) {
@@ -260,7 +260,6 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
                             },
                             icon: Icon(_currentStep == _totalSteps - 1 ? Icons.auto_awesome : Icons.arrow_forward),
                             label: Text(_currentStep == _totalSteps - 1 ? 'VOIR MES RÉSULTATS' : 'SUIVANT'),
-                            style: ElevatedButton.styleFrom(backgroundColor: isDark ? AppColors.primaryDark : AppColors.primaryLight, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                           ),
                         ),
                       ],

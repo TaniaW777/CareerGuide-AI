@@ -1,8 +1,12 @@
+import 'package:careerguide_ai/core/theme/connectivity_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import '../core/theme/app_colors.dart';
+import '../services/local_ia/local_ai_service.dart';
+import '../services/profile_mapper.dart';
 import 'career_paths_screen.dart';
 
 class ProcessingScreen extends StatefulWidget {
@@ -15,7 +19,7 @@ class ProcessingScreen extends StatefulWidget {
 class _ProcessingScreenState extends State<ProcessingScreen> {
   int _tipIndex = 0;
   final List<String> _tips = [
-    "L'IA analyse tes reponses...",
+    "L'IA analyse tes réponses...",
     "Recherche des meilleures options...",
     "Préparation des recommandations..."
   ];
@@ -31,19 +35,44 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
       }
     });
 
-    Future.delayed(const Duration(seconds: 6), () async {
-      if (mounted) {
-        final prefs = await SharedPreferences.getInstance();
-        final userLevel = prefs.getString('user_classe') ?? '3ème';
-        
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => CareerPathsScreen(userLevel: userLevel)),
-          );
-        }
-      }
-    });
+    _fetchRecommendations();
+  }
+
+  Future<void> _fetchRecommendations() async {
+    final connectivity = Provider.of<ConnectivityProvider>(context, listen: false);
+    final prefs = await SharedPreferences.getInstance();
+    final userLevel = prefs.getString('user_classe') ?? '3ème';
+    final rawAnswers = prefs.getString('qa_answers') ?? '';
+    final answers = rawAnswers.isEmpty ? <String>[] : rawAnswers.split(',');
+
+    final profile = buildStudentProfile(userLevel, answers);
+    
+    // Utilisation du mode hybride
+    final bool useOnline = connectivity.isConnected && !connectivity.offlineFirstMode;
+    
+    final result = await LocalAIService.getRecommendations(
+      profile, 
+      onlineMode: useOnline
+    );
+    
+    final List<Map<String, dynamic>> recommendations = List<Map<String, dynamic>>.from(result['recommendations'] ?? []);
+    final String aiAnalysis = result['analysis'] ?? '';
+    
+    final offline = !useOnline || recommendations.isEmpty;
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CareerPathsScreen(
+            userLevel: userLevel,
+            backendRecommendations: recommendations,
+            aiAnalysis: aiAnalysis,
+            offlineMode: offline,
+          ),
+        ),
+      );
+    }
   }
 
   @override

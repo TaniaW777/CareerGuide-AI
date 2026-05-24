@@ -1,6 +1,10 @@
+import 'package:careerguide_ai/core/theme/connectivity_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/search_bar_widget.dart';
+import '../services/local_ia/local_ai_service.dart';
 
 class AdvisorChatScreen extends StatefulWidget {
   const AdvisorChatScreen({super.key});
@@ -33,25 +37,31 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
     _generateResponse(text);
   }
 
-  void _generateResponse(String userText) {
-    String response;
-    final query = userText.toLowerCase();
+  void _generateResponse(String userText) async {
+    final connectivity = Provider.of<ConnectivityProvider>(context, listen: false);
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Récupération complète du profil pour une IA personnalisée
+      final profile = {
+        'first_name': prefs.getString('user_prenom') ?? 'étudiant',
+        'class_level': prefs.getString('user_classe') ?? '3ème',
+        'stream': prefs.getString('user_serie') ?? '',
+        'city': prefs.getString('user_ville') ?? '',
+        'interests': prefs.getStringList('user_interests') ?? [],
+        'favorite_subjects': prefs.getStringList('user_subjects') ?? [],
+      };
+      
+      // Utilisation du mode hybride : online si connecté ET mode offline-first désactivé
+      final bool useOnline = connectivity.isConnected && !connectivity.offlineFirstMode;
+      
+      final response = await LocalAIService.generateChatReply(
+        userText, 
+        profile, 
+        onlineMode: useOnline
+      );
 
-    if (query.contains('école') || query.contains('etablissement')) {
-      response = 'Nous avons répertorié plus de 50 établissements au Burkina Faso. Vous pouvez consulter la liste dans l\'onglet "ÉCOLES" pour voir les détails et postuler.';
-    } else if (query.contains('informatique') || query.contains('logiciel') || query.contains('tech')) {
-      response = 'L\'informatique est un secteur très dynamique. Au Burkina, des instituts comme l\'ESI ou l\'IST offrent d\'excellentes formations en Génie Logiciel.';
-    } else if (query.contains('médecine') || query.contains('santé')) {
-      response = 'La santé est une noble vocation. L\'Université Joseph Ki-Zerbo possède l\'une des facultés de médecine les plus renommées de la sous-région.';
-    } else if (query.contains('bourse')) {
-      response = 'Il existe plusieurs bourses : nationales (FONER), d\'excellence, et internationales. Regardez la section "Bourses" dans l\'onglet ÉCOLES.';
-    } else if (query.contains('merci') || query.contains('au revoir')) {
-      response = 'Je vous en prie ! N\'hésitez pas si vous avez d\'autres questions sur votre futur parcours.';
-    } else {
-      response = 'C\'est une question intéressante. D\'après votre profil, je vous suggère de regarder les filières qui allient vos passions et les besoins du marché actuel.';
-    }
-
-    Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
           _isTyping = false;
@@ -61,7 +71,12 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
           });
         });
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isTyping = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur IA: $e')));
+      }
+    }
   }
 
   @override
@@ -75,25 +90,7 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDark
-                      ? [AppColors.primaryDark, const Color(0xFF6366F1)]
-                      : [AppColors.primaryLight, const Color(0xFF1A56DB)],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
-            ),
-            const SizedBox(width: 10),
-            const Text('Conseiller IA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          ],
-        ),
+        title: const Text('Conseiller IA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
@@ -140,6 +137,8 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
 
   Widget _buildChatBubble(String text, bool isUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
@@ -149,8 +148,8 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
           if (!isUser) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: isDark ? AppColors.primaryDark.withValues(alpha: 0.2) : AppColors.primaryLight.withValues(alpha: 0.1),
-              child: Icon(Icons.auto_awesome, size: 14, color: isDark ? AppColors.primaryDark : AppColors.primaryLight),
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
+              child: Icon(Icons.auto_awesome, size: 14, color: colorScheme.primary),
             ),
             const SizedBox(width: 8),
           ],
@@ -159,7 +158,7 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
               padding: const EdgeInsets.all(16),
               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
               decoration: BoxDecoration(
-                color: isUser ? AppColors.primaryLight : (isDark ? AppColors.surfaceDark : Colors.white),
+                color: isUser ? colorScheme.primary : (isDark ? AppColors.surfaceDark : Colors.white),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -168,7 +167,7 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -178,7 +177,7 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
               child: Text(
                 text,
                 style: TextStyle(
-                  color: isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                  color: isUser ? colorScheme.onPrimary : (isDark ? AppColors.onSurfaceDark : Colors.black87),
                   height: 1.5,
                   fontSize: 15,
                 ),
@@ -189,8 +188,8 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-              child: const Icon(Icons.person_rounded, size: 16, color: AppColors.primaryLight),
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
+              child: Icon(Icons.person_rounded, size: 16, color: colorScheme.primary),
             ),
           ],
         ],

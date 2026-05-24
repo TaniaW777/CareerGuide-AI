@@ -231,17 +231,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> with SingleTick
               ),
               const SizedBox(height: 16),
               Center(
-                child: ElevatedButton(
-                  onPressed: _isTransitioning ? null : _nextStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryLight,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 60),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  ),
-                  child: Text(
-                    _currentStep == _totalSteps ? 'Terminer l\'inscription' : 'Continuer',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.7, // 70% de la largeur
+                  child: ElevatedButton(
+                    onPressed: _isTransitioning ? null : _nextStep,
+                    child: Text(
+                      _currentStep == _totalSteps ? 'Terminer l\'inscription' : 'Continuer',
+                    ),
                   ),
                 ),
               ),

@@ -1,3 +1,4 @@
+import 'package:careerguide_ai/core/theme/connectivity_provider.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:provider/provider.dart';
@@ -100,8 +101,21 @@ class _MainNavigationState extends State<MainNavigation>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
+    final connectivity = Provider.of<ConnectivityProvider>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_titles[_currentIndex], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+        backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           IndexedStack(

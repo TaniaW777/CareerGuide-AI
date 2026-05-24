@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/theme_provider.dart';
+import '../core/theme/notification_provider.dart';
+import '../core/theme/connectivity_provider.dart';
 import 'profile_screen.dart';
 import 'annex_screens.dart';
 import 'welcome_screen.dart';
@@ -124,13 +126,77 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Text('Français', style: TextStyle(color: Colors.grey)),
             onTap: () => _showLanguageDialog(context),
           ),
-          _buildSettingItem(
-            context, 
-            'Notifications', 
-            Icons.notifications_none_outlined, 
-            Colors.red, 
-            trailing: const Text('Activé', style: TextStyle(color: Colors.grey)),
-            onTap: () => _showNotificationSettings(context),
+          Consumer<NotificationProvider>(
+            builder: (context, notifyProvider, child) => _buildSettingItem(
+              context, 
+              'Notifications', 
+              Icons.notifications_none_outlined, 
+              Colors.red, 
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(notifyProvider.notificationsEnabled ? 'Activé' : 'Désactivé', style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[700], fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 10),
+                  Switch.adaptive(
+                    value: notifyProvider.notificationsEnabled,
+                    onChanged: (v) => notifyProvider.toggleNotifications(),
+                    activeColor: AppColors.primaryLight,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _sectionHeader('CONNECTIVITÉ'),
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivityProvider, child) => _buildSettingItem(
+              context,
+              'Mode Offline-First',
+              Icons.cloud_off_outlined,
+              Colors.deepOrange,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    connectivityProvider.offlineFirstMode ? 'Activé' : 'Désactivé',
+                    style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[700], fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 10),
+                  Switch.adaptive(
+                    value: connectivityProvider.offlineFirstMode,
+                    onChanged: (v) async {
+                      await connectivityProvider.setOfflineFirstMode(v);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(v ? '🔴 Mode Offline-First activé' : '🟢 Mode Online standard activé')),
+                        );
+                      }
+                    },
+                    activeColor: AppColors.primaryLight,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivityProvider, child) => _buildSettingItem(
+              context,
+              connectivityProvider.connectionLabel,
+              Icons.signal_cellular_alt,
+              connectivityProvider.isConnected ? Colors.green : Colors.red,
+              trailing: Text(
+                connectivityProvider.isConnected ? 'Connecté' : 'Déconnecté',
+                style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[700], fontWeight: FontWeight.bold),
+              ),
+              onTap: () async {
+                await connectivityProvider.forceCheckConnectivity();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('✓ Connectivité vérifiée')),
+                  );
+                }
+              },
+            ),
           ),
           const SizedBox(height: 24),
           _sectionHeader('SUPPORT'),

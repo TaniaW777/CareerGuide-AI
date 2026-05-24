@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/theme_provider.dart';
+import '../core/theme/notification_provider.dart';
+import '../core/theme/connectivity_provider.dart';
 import 'institutions_screen.dart';
 import 'notifications_screen.dart';
 import 'career_paths_screen.dart';
@@ -11,6 +14,8 @@ import 'series_guide_screen.dart';
 import 'university_fields_screen.dart';
 import 'question_flow_screen.dart';
 import 'profile_screen.dart';
+import '../services/local_ia/local_ai_service.dart';
+import '../core/widgets/app_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,6 +28,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   String _userName = 'Utilisateur';
   String _userLevel = '3ème';
   String _userClassInfo = 'Chargement...';
+  List<Map<String, dynamic>> _recommendations = [];
+  bool _isLoading = true;
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
 
@@ -42,23 +49,47 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    final profile = {
+      'first_name': prefs.getString('user_prenom') ?? 'Étudiant',
+      'class_level': prefs.getString('user_classe') ?? '3ème',
+      'stream': prefs.getString('user_serie') ?? '',
+      'favorite_subjects': prefs.getStringList('user_subjects') ?? [],
+      'interests': prefs.getStringList('user_interests') ?? [],
+    };
+
     setState(() {
       _userName = '${prefs.getString('user_prenom') ?? ''} ${prefs.getString('user_nom') ?? ''}'.trim();
-      if (_userName.isEmpty) _userName = 'Éleve';
+      if (_userName.isEmpty) _userName = 'Élève';
       
-      _userLevel = prefs.getString('user_classe') ?? '3ème';
-      final serie = prefs.getString('user_serie') ?? '';
+      _userLevel = profile['class_level'] as String;
+      final serie = profile['stream'] as String;
       final ville = prefs.getString('user_ville') ?? 'Burkina Faso';
       
       if (_userLevel == 'Tle') {
-        _userClassInfo = 'Terminale $serie - $ville';
+        _userClassInfo = 'Terminale $serie · $ville';
       } else if (_userLevel == '3ème') {
-        _userClassInfo = 'Classe de 3ème - $ville';
+        _userClassInfo = 'Classe de 3ème · $ville';
       } else {
         final autre = prefs.getString('user_classe_autre') ?? '';
-        _userClassInfo = '$autre - $ville';
+        _userClassInfo = '$autre · $ville';
       }
     });
+
+    try {
+        final connectivity = Provider.of<ConnectivityProvider>(context, listen: false);
+        final useOnline = connectivity.isConnected && !connectivity.offlineFirstMode;
+        final results = await LocalAIService.getRecommendations(profile, onlineMode: useOnline);
+        if (mounted) {
+          setState(() {
+            _recommendations = List<Map<String, dynamic>>.from(results['recommendations'] ?? []);
+            _isLoading = false;
+          });
+        }
+    } catch (e) {
+      debugPrint('Error getting local recommendations: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -67,266 +98,258 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     super.dispose();
   }
 
+  void _showQuickNotify(BuildContext context, String message) {
+    final notifyProvider = Provider.of<NotificationProvider>(context, listen: false);
+    if (notifyProvider.notificationsEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subColor = isDark ? AppColors.onSurfaceVariantDark : Colors.white70;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF5F5F5),
+      backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: isDark ? AppColors.backgroundDark : const Color(0xFFF8FAFC),
+        elevation: 0,
+        leadingWidth: 140,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 12, bottom: 12),
+          child: Row(
+            children: [
+              Icon(Icons.auto_awesome, color: isDark ? AppColors.accentDark : AppColors.primaryLight, size: 24),
+              const SizedBox(width: 8),
+              Text('CareerGuide', style: TextStyle(
+                color: isDark ? Colors.white : AppColors.primaryLight,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              )),
+            ],
+          ),
+        ),
+        actions: [
+          _buildNotificationIcon(isDark),
+          const SizedBox(width: 12),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Custom Header Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Bonjour,', style: TextStyle(fontSize: 16, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.75) : Colors.grey[600])),
-                      const SizedBox(height: 4),
-                      Text(_userName, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? AppColors.onSurfaceDark : AppColors.primaryLight)),
-                    ],
-                  ),
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.notifications_active_rounded, color: isDark ? AppColors.onSurfaceDark : Colors.black87, size: 28),
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
-                      ),
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(color: isDark ? AppColors.accentDark : AppColors.primaryLight, shape: BoxShape.circle, border: Border.all(color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.15) : Colors.white, width: 1.5)),
-                          constraints: const BoxConstraints(minWidth: 10, minHeight: 10),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(_userClassInfo, style: TextStyle(fontSize: 13, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.68) : Colors.grey[500])),
-              const SizedBox(height: 24),
+              // --- PREMIUM BANNER (EPUREE) ---
+              _buildPremiumBanner(isDark, subColor),
+              const SizedBox(height: 28),
 
-              // Circular Progress Card
+              // Progress Circle Card
               _buildProgressCircleCard(isDark),
               const SizedBox(height: 24),
 
-              // Stats Row
+              // Quick Stats Row
               Row(
                 children: [
                   Expanded(child: _buildStatCard(
                     icon: Icons.auto_awesome_rounded,
-                    iconBg: isDark ? const Color(0xFF1A3A5C) : const Color(0xFFE8F0FE),
-                    iconColor: isDark ? const Color(0xFF64B5F6) : AppColors.primaryLight,
+                    iconBg: (isDark ? AppColors.accentDark : AppColors.accentLight).withValues(alpha: 0.15),
+                    iconColor: isDark ? AppColors.accentDark : const Color(0xFFD97706),
                     value: _userLevel == '3ème' ? '4' : '3',
-                    label: _userLevel == '3ème' ? 'Séries suggérées' : 'Filières recommandées',
+                    label: 'Séries suggérées',
                     isDark: isDark,
-                    onTap: () => _showCardInfoDialog(
-                      'Séries recommandées',
-                      _userLevel == '3ème'
-                          ? 'Ces séries sont suggérées en fonction de ton profil scolaire et de tes intérêts.'
-                          : 'Ces filières sont recommandées selon ton niveau et tes réponses précédentes.',
-                    ),
                   )),
-
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(child: _buildStatCard(
                     icon: Icons.school_rounded,
-                    iconBg: isDark ? const Color(0xFF2D1A3A) : const Color(0xFFF3E8FF),
-                    iconColor: isDark ? const Color(0xFFCE93D8) : const Color(0xFF7C3AED),
-                    value: _userLevel == '3ème' ? '8' : '5',
-                    label: _userLevel == '3ème' ? 'Lycées trouvés' : 'Établissements trouvés',
+                    iconBg: (isDark ? AppColors.primaryDark : AppColors.primaryLight).withValues(alpha: 0.15),
+                    iconColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                    value: _userLevel == '3ème' ? '12' : '8',
+                    label: 'Écoles trouvées',
                     isDark: isDark,
-                    onTap: () => _showCardInfoDialog(
-                      'Établissements adaptés',
-                      _userLevel == '3ème'
-                          ? 'Voici les lycées qui correspondent le mieux à ton projet d’orientation.'
-                          : 'Voici les établissements supérieurs les plus adaptés à ton profil.',
-                    ),
                   )),
-
                 ],
               ),
+              const SizedBox(height: 32),
+
+              // Actions
+              const Text('Actions recommandées', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-
-              // Alert Banner (Latest Notification Preview) - show MESRI details on tap
-              GestureDetector(
-                onTap: () => _showMesriDialog(),
-                child: _buildNotificationBanner(isDark),
-              ),
-              const SizedBox(height: 28),
-
-              // Actions rapides
-              Text('Actions rapides', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-              const SizedBox(height: 16),
-
-              // 1x2 Grid of quick actions
-              Row(
-                children: [
-                  Expanded(child: _buildQuickAction(
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (_recommendations.isEmpty)
+                _buildQuickAction(
+                  icon: Icons.psychology_outlined,
+                  label: 'Relancer l\'analyse IA',
+                  subtitle: 'Mettre à jour tes recommandations',
+                  color: AppColors.primaryLight,
+                  isDark: isDark,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuestionFlowScreen(selectedClasse: _userLevel))),
+                )
+              else
+                ..._recommendations.map((rec) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildQuickAction(
                     icon: Icons.auto_awesome,
-                    label: _userLevel == '3ème' ? 'Mes Séries' : 'Mes Reco.',
-                    subtitle: _userLevel == '3ème' ? 'Séries recommandées' : 'Filières recommandées',
-                    iconBg: isDark ? const Color(0xFF3D2E0A) : const Color(0xFFFFF8E1),
-                    iconColor: isDark ? const Color(0xFFFFD54F) : const Color(0xFFE37B00),
+                    label: rec['program'],
+                    subtitle: 'Score de match: ${rec['score']}%',
+                    color: AppColors.primaryLight,
                     isDark: isDark,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CareerPathsScreen(userLevel: _userLevel))),
-                  )),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildQuickAction(
-                    icon: Icons.explore_outlined,
-                    label: _userLevel == '3ème' ? 'Guide des Séries' : 'Guide Métiers',
-                    subtitle: 'Découverte',
-                    iconBg: isDark ? const Color(0xFF1A2A3A) : const Color(0xFFE0F2F1),
-                    iconColor: isDark ? const Color(0xFF80CBC4) : const Color(0xFF00897B),
-                    isDark: isDark,
-                    onTap: () {
-                      if (_userLevel == 'Tle' || _userLevel == 'Tle') {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const UniversityFieldsScreen()));
-                      } else {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const SeriesGuideScreen()));
-                      }
-                    },
-                  )),
-                ],
+                    onTap: () => _showQuickNotify(context, 'Analyse des écoles pour ${rec['program']}...'),
+                  ),
+                )),
+              const SizedBox(height: 12),
+              _buildQuickAction(
+                icon: Icons.map_outlined,
+                label: 'Explorer les métiers',
+                subtitle: 'Découvrir les débouchés réels',
+                color: AppColors.secondaryLight,
+                isDark: isDark,
+                onTap: () => _showQuickNotify(context, 'Guide des métiers en cours de chargement...'),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
 
-              // Prochaines échéances
-              Text('Prochaines échéances', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              // Alert Banner
+              const Text('Dernière alerte', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              if (_userLevel == '3ème') ...[
-                _buildDeadlineItem(
-                'Dépôt dossiers Orientation',
-                '10 juin 2025',
-                '29j',
-                isDark,
-                Icons.description,
-                onTap: () => _showCardInfoDialog(
-                  'Dépôt dossiers Orientation',
-                  'Prépare ton dossier d’orientation avant le 10 juin 2025 pour ne pas rater les inscriptions.',
-                ),
-              ),
-                const SizedBox(height: 10),
-                _buildDeadlineItem(
-                  'Examens BEPC',
-                  '02 juin 2025',
-                  '21j',
-                  isDark,
-                  Icons.edit_document,
-                  onTap: () => _showCardInfoDialog(
-                    'Examens BEPC',
-                    'Les examens approchent. Révise bien les matières principales pour réussir.',
-                  ),
-                ),
-              ] else ...[
-                _buildDeadlineItem(
-                  'Dossier Université Ouaga I',
-                  '30 mai 2025',
-                  '18j',
-                  isDark,
-                  Icons.school,
-                  onTap: () => _showCardInfoDialog(
-                    'Dossier Université Ouaga I',
-                    'Soumets ton dossier avant le 30 mai pour avoir une meilleure chance d’admission.',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _buildDeadlineItem(
-                  'Concours CFPR-Z Ziniaré',
-                  '15 juin 2025',
-                  '34j',
-                  isDark,
-                  Icons.work_outline,
-                  onTap: () => _showCardInfoDialog(
-                    'Concours CFPR-Z Ziniaré',
-                    'Prépare-toi pour le concours du CFPR-Z avec un plan de révision structuré.',
-                  ),
-                ),
-              ],
-              const SizedBox(height: 28),
-
-              // Commencer l'analyse - LAST element
-              _buildSmallOfflineIndicator(isDark),
-              const SizedBox(height: 16),
-              _buildAnalyseBanner(isDark),
+              _buildNotificationBanner(isDark, context),
               const SizedBox(height: 40),
             ],
           ),
         ),
       ),
+      // AI ADVISOR BUTTON REMOVED
+      );
+      }
+
+  Widget _buildNotificationIcon(bool isDark) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_none_rounded, size: 28),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+        ),
+        Positioned(
+          right: 12,
+          top: 12,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              shape: BoxShape.circle,
+              border: Border.all(color: isDark ? AppColors.backgroundDark : Colors.white, width: 1.5),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  // Circular progress card with dual rings
-  Widget _buildProgressCircleCard(bool isDark) {
+  Widget _buildPremiumBanner(bool isDark, Color subColor) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark 
+            ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+            : [AppColors.primaryLight, const Color(0xFF1E40AF)],
+        ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.black : AppColors.primaryLight).withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Bonjour 👋', style: TextStyle(fontSize: 16, color: subColor, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          Text(_userName, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.school_outlined, color: Colors.white, size: 14),
+                const SizedBox(width: 8),
+                Text(_userClassInfo, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCircleCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: isDark ? Border.all(color: AppColors.borderDark) : null,
-        boxShadow: isDark ? [BoxShadow(color: Colors.black.withValues(alpha: 0.14), blurRadius: 20, offset: const Offset(0, 8))] : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ],
       ),
       child: Row(
         children: [
-          // The circular progress (smaller)
           SizedBox(
-            width: 90,
-            height: 90,
+            width: 80,
+            height: 80,
             child: AnimatedBuilder(
               animation: _progressAnimation,
               builder: (context, child) {
                 return CustomPaint(
                   painter: _DualRingPainter(
-                    progress: _progressAnimation.value * 0.65,
-                    outerColor: AppColors.accentLight, // Gold
-                    innerColor: AppColors.primaryLight, // Blue
-                    trackColor: isDark ? AppColors.borderDark : const Color(0xFFE8ECF0),
-                    isDark: isDark,
+                    progress: _progressAnimation.value * 0.75,
+                    outerColor: isDark ? AppColors.accentDark : AppColors.accentLight,
+                    innerColor: isDark ? AppColors.primaryDark : AppColors.primaryLight,
+                    trackColor: isDark ? AppColors.borderDark : const Color(0xFFF1F5F9),
                   ),
                   child: Center(
                     child: Text(
-                      '${(_progressAnimation.value * 65).toInt()}%',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? AppColors.onSurfaceDark : Colors.black87),
+                      '${(_progressAnimation.value * 75).toInt()}%',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(width: 20),
-          // Info
+          const SizedBox(width: 24),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'PROFIL COMPLÉTÉ',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.7) : Colors.grey[500]),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Ton dossier est presque prêt pour l\'analyse.',
-                  style: TextStyle(fontSize: 13, color: isDark ? AppColors.onSurfaceDark : Colors.black87, height: 1.4),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _buildLegendDot(AppColors.accentLight, 'Orientation', isDark),
-                    const SizedBox(width: 16),
-                    _buildLegendDot(AppColors.primaryLight, 'Profil', isDark),
-                  ],
-                ),
+                const Text('ANALYSE DU PROFIL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: AppColors.accentLight)),
+                const SizedBox(height: 6),
+                const Text('Dossier complet à 75%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text('Ajoute tes matières préférées pour affiner le résultat.', style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceVariantDark : Colors.grey[600])),
               ],
             ),
           ),
@@ -335,374 +358,88 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildLegendDot(Color color, String label, bool isDark) {
-    return Row(
-      children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.72) : Colors.grey[600])),
-      ],
-    );
-  }
-
-  void _showCardInfoDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showMesriDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Concours MESRI - Informations'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Date limite : 30 juin 2025'),
-              SizedBox(height: 8),
-              Text('Conditions : dossier scolaire, relevés de notes, lettre de motivation et pièces d\'identité.'),
-              SizedBox(height: 8),
-              Text('Comment se préparer : réviser les matières de base, suivre les annales et préparer un CV scolaire.'),
-              SizedBox(height: 12),
-              Text('''Informations pratiques :
-• Lieu : Centres d'examen locaux
-• Frais : gratuit ou faible selon l'année
-• Contact : mesri@example.gov
-'''),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              showModalBottomSheet(
-                context: context,
-                builder: (_) => Container(
-                  padding: const EdgeInsets.all(20),
-                  height: 220,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Dossier de candidature', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      const Text('''- Relevés de notes
-- Lettre de motivation
-- Pièce d'identité
-- CV scolaire''', style: TextStyle(height: 1.6)),
-                      const Spacer(),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Téléchargement du modèle de dossier (placeholder)')));
-                          },
-                          child: const Text('Télécharger le modèle de dossier'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-            child: const Text('Voir dossier'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({required IconData icon, required Color iconBg, required Color iconColor, required String value, required String label, required bool isDark, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: isDark ? Border.all(color: AppColors.borderDark) : null,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04), blurRadius: 12, offset: const Offset(0, 6))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, color: iconColor, size: 24),
-            ),
-            const SizedBox(height: 16),
-            Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: isDark ? AppColors.onSurfaceDark : Colors.black87)),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.72) : Colors.grey[600])),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationBanner(bool isDark) {
+  Widget _buildStatCard({required IconData icon, required Color iconBg, required Color iconColor, required String value, required String label, required bool isDark}) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.primaryDark.withValues(alpha: 0.12) : const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.primaryDark.withValues(alpha: 0.22) : const Color(0xFFFFE082)),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: isDark ? AppColors.borderDark : Colors.transparent),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04), blurRadius: 12, offset: const Offset(0, 4))],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: isDark ? AppColors.accentDark.withValues(alpha: 0.18) : const Color(0xFFFFECB3), borderRadius: BorderRadius.circular(12)),
-            child: Icon(Icons.notifications_active_rounded, color: AppColors.accentDark, size: 20),
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Concours MESRI : ton dossier est en cours de préparation. Raison : ton profil correspond bien aux attentes du CIOSPB.',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.88) : Colors.amber[900], height: 1.5),
-            ),
-          ),
+          const SizedBox(height: 16),
+          Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceVariantDark : Colors.grey[600], height: 1.2)),
         ],
       ),
     );
   }
 
-  Widget _buildSmallOfflineIndicator(bool isDark) {
-    return GestureDetector(
-      onTap: () => _showOfflineShareDialog(context, isDark),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? AppColors.borderDark : Colors.grey.shade200),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04), blurRadius: 10, offset: const Offset(0, 4))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.wifi_off, color: AppColors.accentLight, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Mode hors-ligne actif', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.onSurfaceDark : Colors.black87)),
-                  const SizedBox(height: 2),
-                  Text('Recommandations accessibles localement', style: TextStyle(fontSize: 11, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.6) : Colors.grey[600])),
-                ],
-              ),
-            ),
-            Icon(Icons.share_outlined, size: 20, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.5) : Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showOfflineShareDialog(BuildContext context, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 40, height: 5, decoration: BoxDecoration(color: isDark ? Colors.white12 : Colors.grey[300], borderRadius: BorderRadius.circular(3)))),
-            const SizedBox(height: 20),
-            const Text('Partager sans connexion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text(
-              'Cette option permet de simuler un partage local de l’application via Bluetooth ou Wi-Fi direct. Aucune donnée n’est envoyée sur Internet.',
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.grey.shade700, fontSize: 14, height: 1.6),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fonctionnalité de partage hors-ligne en préparation.')));
-                    },
-                    icon: const Icon(Icons.bluetooth),
-                    label: const Text('Bluetooth'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryLight,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({required IconData icon, required String label, required String subtitle, required Color iconBg, required Color iconColor, required bool isDark, required VoidCallback onTap}) {
-    return GestureDetector(
+  Widget _buildQuickAction({required IconData icon, required String label, required String subtitle, required Color color, required bool isDark, required VoidCallback onTap}) {
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: isDark ? Border.all(color: AppColors.borderDark) : Border.all(color: Colors.grey.shade200),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04), blurRadius: 14, offset: const Offset(0, 6))],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isDark ? AppColors.borderDark : Colors.grey.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, color: iconColor, size: 22),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
+              child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? AppColors.onSurfaceDark : Colors.black87)),
-                  const SizedBox(height: 6),
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.68) : Colors.grey[600], height: 1.4)),
+                  Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text(subtitle, style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceVariantDark : Colors.grey[600])),
                 ],
               ),
             ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? Colors.white24 : Colors.grey[300]),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDeadlineItem(String title, String date, String days, bool isDark, IconData icon, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: isDark ? Border.all(color: AppColors.borderDark) : Border.all(color: Colors.grey.shade200),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04), blurRadius: 12, offset: const Offset(0, 6))],
-        ),
-        child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.primaryDark.withValues(alpha: 0.18) : const Color(0xFFE8F0FE),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: AppColors.primaryDark, size: 22),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? AppColors.onSurfaceDark : Colors.black87)),
-                const SizedBox(height: 4),
-                Text(date, style: TextStyle(fontSize: 12, color: isDark ? AppColors.onSurfaceDark.withValues(alpha: 0.6) : Colors.grey[500])),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.accentDark.withValues(alpha: 0.18) : const Color(0xFFFFF3E0),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(days, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? AppColors.accentDark : const Color(0xFFE37B00))),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-  // Commencer l'analyse - bottom banner
-  Widget _buildAnalyseBanner(bool isDark) {
+  Widget _buildNotificationBanner(bool isDark, BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [AppColors.primaryDark, AppColors.accentDark]
-              : [AppColors.primaryLight, const Color(0xFF4B7BFE)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: AppColors.primaryDark.withValues(alpha: 0.16), blurRadius: 18, offset: const Offset(0, 8))],
+        color: isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.blue.withValues(alpha: 0.2) : Colors.blue.withValues(alpha: 0.1)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.psychology, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Text('Trouve ton orientation', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Lance une analyse IA pour découvrir les meilleures filières pour toi.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.88), fontSize: 13, height: 1.55),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuestionFlowScreen(selectedClasse: _userLevel))),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primaryDark,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-              child: const Text('Commencer l\'analyse', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Icon(Icons.info_outline_rounded, color: Colors.blue, size: 24),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Concours d\'excellence : les inscriptions sont ouvertes jusqu\'au 15 juin.',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, height: 1.4),
             ),
+          ),
+          TextButton(
+            onPressed: () => _showQuickNotify(context, 'Ouverture du portail MESRI...'),
+            child: const Text('Détails'),
           ),
         ],
       ),
@@ -710,36 +447,31 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 }
 
-// Custom painter for dual-ring progress
 class _DualRingPainter extends CustomPainter {
   final double progress;
   final Color outerColor;
   final Color innerColor;
   final Color trackColor;
-  final bool isDark;
 
-  _DualRingPainter({required this.progress, required this.outerColor, required this.innerColor, required this.trackColor, required this.isDark});
+  _DualRingPainter({required this.progress, required this.outerColor, required this.innerColor, required this.trackColor});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final outerRadius = size.width / 2 - 4;
-    final innerRadius = size.width / 2 - 14;
-    const strokeWidth = 8.0;
-    const startAngle = -math.pi / 2;
+    final innerRadius = size.width / 2 - 12;
+    const strokeWidth = 6.0;
+    final startAngle = -math.pi / 2;
 
-    // Outer track
-    canvas.drawCircle(center, outerRadius, Paint()..color = trackColor..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round);
-    // Inner track
-    canvas.drawCircle(center, innerRadius, Paint()..color = trackColor..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round);
+    final trackPaint = Paint()..color = trackColor..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, outerRadius, trackPaint);
+    canvas.drawCircle(center, innerRadius, trackPaint);
 
-    // Outer progress
     final outerPaint = Paint()..color = outerColor..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round;
     canvas.drawArc(Rect.fromCircle(center: center, radius: outerRadius), startAngle, 2 * math.pi * progress, false, outerPaint);
 
-    // Inner progress
     final innerPaint = Paint()..color = innerColor..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round;
-    canvas.drawArc(Rect.fromCircle(center: center, radius: innerRadius), startAngle, 2 * math.pi * (progress * 0.85), false, innerPaint);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: innerRadius), startAngle, 2 * math.pi * (progress * 0.8), false, innerPaint);
   }
 
   @override
