@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Université Joseph Ki-Zerbo",
+    "city": "Ouagadougou",
+    "filieres": ["Médecine", "Pharmacie", "Informatique"]
+  },
+  {
+    "name": "Université Thomas Sankara",
+    "city": "Ouagadougou",
+    "filieres": ["Médecine", "Droit", "Gestion"]
+  },
+  {
+    "name": "Université Nazi Boni",
+    "city": "Bobo-Dioulasso",
+    "filieres": ["Agronomie", "Biologie", "Informatique"]
+  },
+  {
+    "name": "Burkina Institute of Technology",
+    "city": "Koudougou",
+    "filieres": ["Computer Science", "Engineering"]
+  }
+]
