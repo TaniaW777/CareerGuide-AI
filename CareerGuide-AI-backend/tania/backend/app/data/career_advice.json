@@ -1,0 +1,17 @@
+{
+  "etudes_courtes": [
+    "BTS",
+    "DUT",
+    "Licence Professionnelle"
+  ],
+  "sante": [
+    "Médecine",
+    "Pharmacie",
+    "Infirmier"
+  ],
+  "technologie": [
+    "Informatique",
+    "Réseaux",
+    "Génie logiciel"
+  ]
+}

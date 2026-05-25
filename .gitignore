@@ -1,0 +1,42 @@
+# Root project ignores
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.Python
+**/venv/
+**/.venv/
+**/env/
+**/ENV/
+**/.env
+**/.env.*
+
+# Node
+**/node_modules/
+**/dist/
+**/out/
+**/.vite/
+
+# Flutter
+**/.dart_tool/
+**/build/
+**/pubspec.lock
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Database and logs
+*.db
+*.sqlite3
+*.log
+
+# Ignore nested frontend Git repository metadata
+CareerGuide_AI_frontend/.git/
+
+# Ignore hidden system files
+.DS_Store
+Thumbs.db
