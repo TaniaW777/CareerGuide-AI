@@ -98,88 +98,134 @@ export function getRecommendationsForProfile(profile: UserProfile): { recommenda
   return { recommendations: scoredPrograms, scholarships, analysis };
 }
 
+// ===================================================================
+// SMART OFFLINE FALLBACK (works without Ollama installed)
+// ===================================================================
+function getSmartFallback(msg: string, profile: UserProfile | null): string {
+  const lower = msg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const name = profile?.name || 'toi';
+  const level = profile?.education || 'ton niveau';
+  const interests = profile?.interests?.join(', ') || '';
+
+  // Greetings
+  if (/\b(salut|bonjour|hello|hey|bonsoir|coucou|slt)\b/.test(lower)) {
+    return `Bonjour ${name} ! Je suis ton Conseiller IA CareerGuide, specialise dans l'orientation scolaire au Burkina Faso. Comment puis-je t'aider aujourd'hui ? Tu peux me poser des questions sur les series du BAC, les universites, les bourses, ou les formations professionnelles.`;
+  }
+  // Thanks
+  if (/\b(merci|thanks|ok merci)\b/.test(lower)) {
+    return `De rien ${name} ! N'hesite pas si tu as d'autres questions sur ton orientation. Je suis la pour t'aider.`;
+  }
+  // Who are you
+  if (/\b(qui es[- ]tu|tu es qui|c.*quoi|comment tu t.*appel)\b/.test(lower)) {
+    return `Je suis ton Conseiller IA CareerGuide ! Je suis specialise dans le systeme educatif du Burkina Faso. Je peux t'aider a choisir ta serie au lycee, trouver une universite, decouvrir les bourses disponibles (CIOSPB, FONER, AUF) ou explorer des formations professionnelles (CAP/BEP).`;
+  }
+  // Series
+  if (/\bserie\s*c\b/.test(lower)) {
+    return `La Serie C au Burkina Faso est la filiere scientifique la plus exigeante, axee sur les Mathematiques et la Physique-Chimie. Elle est ideale si tu veux poursuivre en ingenierie, informatique, mathematiques pures ou physique a l'universite. Les lycees de reference sont le Lycee Philippe Zinda Kabore et le Prytanee Militaire du Kadiogo.`;
+  }
+  if (/\bserie\s*d\b/.test(lower)) {
+    return `La Serie D est une filiere scientifique orientee vers les Sciences de la Vie et de la Terre. C'est la voie privilegiee pour faire medecine, pharmacie, agronomie ou biologie a l'universite. Si tu aimes la nature et les sciences du vivant, c'est la serie qu'il te faut !`;
+  }
+  if (/\bserie\s*a\b/.test(lower)) {
+    return `La Serie A est la filiere litteraire du lycee au Burkina. Elle est axee sur les Langues, la Philosophie et la Litterature. Elle ouvre les portes vers le Droit, la Communication, le Journalisme, l'Enseignement ou les Relations Internationales a l'universite.`;
+  }
+  if (/\bserie\s*(g|grh)\b/.test(lower) || /\bgrh\b/.test(lower)) {
+    return `La Serie G (aussi appelee GRH - Gestion des Ressources Humaines) est axee sur la Gestion, le Commerce, la Comptabilite et le Secretariat. Attention, cela n'a rien a voir avec la biologie ! C'est une voie ideale pour les carrieres en entreprise, banque ou administration.`;
+  }
+  if (/\bserie\s*e\b/.test(lower)) {
+    return `La Serie E est axee sur les Mathematiques et la Technique. Elle combine les sciences exactes avec les applications techniques et technologiques. C'est une bonne voie pour l'ingenierie technique.`;
+  }
+  if (/\bserie\s*f\b/.test(lower)) {
+    return `La Serie F est la filiere technologique du lycee. Elle couvre les technologies industrielles et prepare aux metiers techniques avances. Elle ouvre les portes vers les BTS et les ecoles d'ingenieur.`;
+  }
+  if (/\b(serie|quelle serie|choisir|orientation|filiere)\b/.test(lower) && !/\b[a-g]\b/.test(lower)) {
+    return `Au Burkina Faso, apres la 3eme, tu peux choisir parmi les series suivantes au lycee : Serie A (Lettres), Serie C (Maths/Physique), Serie D (Biologie/SVT), Serie E (Maths/Technique), Serie F (Technologie), Serie G (Gestion/Commerce). Tu peux aussi opter pour un CAP ou BEP si tu preferes une formation professionnelle courte. Quelle matiere aimes-tu le plus ?`;
+  }
+  // Bourses
+  if (/\b(bourse|ciospb|foner|auf|aide financ|financement)\b/.test(lower)) {
+    return `Au Burkina Faso, voici les principales bourses disponibles :\n- CIOSPB : Bourses gouvernementales nationales et internationales pour les bacheliers meritants.\n- FONER : Fonds National pour l'Education et la Recherche, offre des prets et aides financieres aux etudiants.\n- AUF : Bourses de mobilite dans l'espace francophone.\nCes bourses sont des aides financieres, pas des formations. Tu peux visiter ciospb.gov.bf pour postuler.`;
+  }
+  // CAP/BEP
+  if (/\b(cap|bep|formation pro|professionnel)\b/.test(lower)) {
+    return `Les CAP et BEP sont des formations professionnelles courtes accessibles apres la 3eme au Burkina Faso. Tu peux te former en Comptabilite, Mecanique Auto, Menuiserie, Dessin Batiment, Informatique et bien d'autres. C'est un excellent choix si tu veux apprendre un metier concret et entrer rapidement dans la vie active.`;
+  }
+  // University
+  if (/\b(universit|fac|etude sup|apres le bac|licence|master)\b/.test(lower)) {
+    return `Apres le BAC au Burkina Faso, tu peux t'inscrire dans plusieurs universites publiques : Universite Joseph Ki-Zerbo (Ouagadougou), Universite Nazi Boni (Bobo-Dioulasso), Universite Thomas Sankara (Ouagadougou), ou au Burkina Institute of Technology (Koudougou). Les filieres vont de la Medecine a l'Informatique en passant par le Droit et l'Agronomie.`;
+  }
+  // BEPC
+  if (/\b(bepc|brevet|college|3eme|troisieme)\b/.test(lower)) {
+    return `Apres le BEPC (fin de 3eme), tu as deux grandes options au Burkina : aller au lycee general (Series A, C, D, E, F, G) pour passer le BAC, ou choisir une formation professionnelle (CAP/BEP) pour apprendre un metier. Le choix depend de tes matieres fortes et de tes objectifs.`;
+  }
+  // Help / generic
+  if (/\b(aide|help|comment|quoi faire|que faire|conseil)\b/.test(lower)) {
+    return `Je peux t'aider avec plusieurs choses, ${name} :\n- Choisir ta serie au lycee (A, C, D, E, F, G)\n- Decouvrir les universites du Burkina Faso\n- Explorer les formations professionnelles (CAP/BEP)\n- Trouver des bourses d'etudes (CIOSPB, FONER, AUF)\n- Comprendre le systeme educatif burkinabe\nPose-moi ta question !`;
+  }
+  // Default with personalization
+  if (interests) {
+    return `Bonne question ! En tant qu'eleve de ${level} avec un interet pour ${interests}, je te recommande d'explorer les filieres correspondantes. Veux-tu que je t'explique les series du BAC, les universites ou les formations professionnelles au Burkina Faso ?`;
+  }
+  return `Je suis la pour t'aider dans ton orientation scolaire au Burkina Faso, ${name}. Tu peux me poser des questions sur les series du BAC (A, C, D, E, F, G), les universites, les bourses (CIOSPB, FONER) ou les formations professionnelles. Que souhaites-tu savoir ?`;
+}
+
+// ===================================================================
+// MAIN CHAT FUNCTION
+// ===================================================================
 export async function getChatReply(
   message: string,
   profile: UserProfile | null,
   history: { sender: string; text: string }[] = []
 ): Promise<string> {
-  const profileContext = profile 
-    ? `Prénom: ${profile.name} | Niveau: ${profile.education} | Intérêts: ${profile.interests.join(', ')} | Compétences: ${profile.skills} | Objectif: ${profile.goals}` 
-    : 'Profil non renseigné';
+  const name = profile?.name || '';
+  const level = profile?.education || '';
 
-  // Smart Offline Fallback (Rules-based bot) when Ollama is not available
-  const getFallbackReply = (msg: string) => {
-    const lower = msg.toLowerCase();
-    const name = profile?.name || "toi";
-    const level = profile?.education || "ton niveau";
-
-    if (lower.includes('salut') || lower.includes('bonjour') || lower.includes('hello')) {
-      return `Bonjour ${name} ! Je suis ton Conseiller IA CareerGuide. Comment puis-je t'aider dans ton orientation aujourd'hui ?`;
-    }
-    if (lower.includes('bourse') || lower.includes('ciospb') || lower.includes('foner') || lower.includes('auf')) {
-      return "Au Burkina Faso, tu peux demander des aides financières (bourses) via le CIOSPB pour les études universitaires, ou le FONER pour un prêt ou une aide. L'AUF propose aussi des bourses pour la francophonie. As-tu déjà ton BAC ?";
-    }
-    if (lower.includes('série c') || lower.includes('serie c')) {
-      return "La Série C est une filière très scientifique axée sur les Mathématiques et la Physique-Chimie. C'est parfait si tu veux faire de l'ingénierie, de l'informatique ou de la recherche.";
-    }
-    if (lower.includes('série d') || lower.includes('serie d') || lower.includes('biologie') || lower.includes('médecine')) {
-      return "La Série D est orientée vers les Sciences de la Vie et de la Terre. C'est la voie privilégiée pour faire médecine, pharmacie, agronomie ou biologie à l'université.";
-    }
-    if (lower.includes('grh') || lower.includes('gestion') || lower.includes('commerce') || lower.includes('série g')) {
-      return "La Série G et les filières GRH (Gestion des Ressources Humaines) sont axées sur le management, le secrétariat et la comptabilité. Cela n'a rien à voir avec la biologie !";
-    }
-    if (lower.includes('cap') || lower.includes('bep')) {
-      return "Les CAP et BEP sont d'excellentes formations professionnelles courtes (Menuiserie, Comptabilité, Mécanique, etc.) idéales si tu veux apprendre un métier concret rapidement après la 3ème.";
-    }
-    if (lower.includes('université') || lower.includes('fac')) {
-      return "Après le BAC, tu peux t'inscrire dans des universités publiques comme Joseph Ki-Zerbo (Ouaga) ou Nazi Boni (Bobo-Dioulasso), ou dans des instituts privés comme le BIT à Koudougou.";
-    }
-    
-    return `C'est une excellente question pour ton orientation. En tant qu'élève de ${level}, je te conseille de bien analyser tes matières fortes. Veux-tu explorer les filières scientifiques, littéraires ou professionnelles ?`;
-  };
-
-  const systemContext = `Tu es un conseiller d'orientation scolaire expert, strict et concis, basé au Burkina Faso. 
-RÈGLES STRICTES : Ne génère JAMAIS de markdown (pas de *, pas de #). Réponds en 2 ou 3 phrases simples et directes. N'invente rien. 
-Rappel: Série G/GRH = Gestion/Commerce (PAS Biologie). CIOSPB = Bourse (PAS une école). Série C = Maths/Physique.
-Profil de l'élève : ${profileContext}.`;
-
-  // Gemma models struggle with separate 'system' roles. We merge it into the user prompt or use a single user prompt for context.
-  const recentHistory = history.slice(-6).map(msg => `${msg.sender === 'user' ? 'Élève' : 'Conseiller'}: ${msg.text}`).join('\n');
-  
-  const finalPrompt = `${systemContext}\n\nHistorique récent:\n${recentHistory}\n\nÉlève: ${message}\nConseiller:`;
+  // Build a SHORT prompt (crucial for gemma:2b)
+  const shortPrompt = `Tu es un conseiller scolaire au Burkina Faso. Reponds en francais en 2-3 phrases. L'eleve s'appelle ${name || 'inconnu'} et est en ${level || 'niveau inconnu'}. Un eleve te dit: ${message}. Que reponds-tu?`;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s max
+
     const response = await fetch('http://127.0.0.1:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gemma:2b',
-        prompt: finalPrompt,
+        prompt: shortPrompt,
         stream: false,
         options: {
-          temperature: 0.3, // Lower temperature to stop hallucinations
-          top_p: 0.8,
-          num_predict: 150,
+          temperature: 0.4,
+          top_p: 0.85,
+          num_predict: 100,
         }
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       const data = await response.json();
       let reply = data.response?.trim();
-      
-      // Cleanup common gemma hallucinations if it mimics the user
-      if (reply.startsWith('Conseiller:')) reply = reply.replace('Conseiller:', '').trim();
-      if (reply.includes('Élève:')) reply = reply.split('Élève:')[0].trim();
-      
-      if (reply && reply.length > 5) return reply;
+
+      // Basic cleanup
+      if (reply) {
+        // Remove role prefixes if model hallucinates them
+        reply = reply.replace(/^(Conseiller|Assistant|Réponse)\s*:\s*/i, '').trim();
+        // Stop if model starts role-playing as the student
+        if (reply.includes('Élève:') || reply.includes('Eleve:')) {
+          reply = reply.split(/[EÉ]l[eè]ve\s*:/i)[0].trim();
+        }
+        // Remove markdown artifacts
+        reply = reply.replace(/[*#]/g, '').trim();
+
+        if (reply.length > 10) return reply;
+      }
     }
   } catch (error) {
-    console.error('Erreur connexion Ollama. Utilisation du fallback intégré:', error);
+    console.log('Ollama non disponible, utilisation du bot integre.');
   }
 
-  // Fallback if Ollama is not installed or fails (Zero-install offline mode)
-  return getFallbackReply(message);
+  // Fallback: Smart rules-based bot (works without Ollama)
+  return getSmartFallback(message, profile);
 }
-
-
