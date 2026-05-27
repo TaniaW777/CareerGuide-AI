@@ -176,27 +176,33 @@ export async function getChatReply(
   profile: UserProfile | null,
   history: { sender: string; text: string }[] = []
 ): Promise<string> {
-  const name = profile?.name || '';
-  const level = profile?.education || '';
+// Duplicate declarations removed
 
   // Build a SHORT prompt (crucial for gemma:2b)
-  const shortPrompt = `Tu es un conseiller scolaire au Burkina Faso. Reponds en francais en 2-3 phrases. L'eleve s'appelle ${name || 'inconnu'} et est en ${level || 'niveau inconnu'}. Un eleve te dit: ${message}. Que reponds-tu?`;
+  const name = profile?.name || 'inconnu';
+  const level = profile?.education || 'niveau inconnu';
+  const systemContext = `Tu es un conseiller scolaire au Burkina Faso. L'eleve s'appelle ${name} et est en ${level}. Reponds en francais en 2-3 phrases.`;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s max
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s max
 
-    const response = await fetch('http://127.0.0.1:11434/api/generate', {
+    const response = await fetch('http://127.0.0.1:11434/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gemma:2b',
-        prompt: shortPrompt,
+        messages: [
+          { role: 'system', content: systemContext },
+          // Include only the last 6 exchanged messages (max 12 entries)
+          ...history.slice(-12).map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.text })),
+          { role: 'user', content: message }
+        ],
         stream: false,
         options: {
-          temperature: 0.4,
-          top_p: 0.85,
-          num_predict: 100,
+          temperature: 0.3,
+          top_p: 0.8,
+          num_predict: 150
         }
       }),
       signal: controller.signal,
@@ -226,6 +232,30 @@ export async function getChatReply(
     console.log('Ollama non disponible, utilisation du bot integre.');
   }
 
+  // Try Wikipedia fallback for generic queries
+  const wikiAnswer = await fetchWikiSummary(message);
+  if (wikiAnswer) return wikiAnswer;
+
   // Fallback: Smart rules-based bot (works without Ollama)
   return getSmartFallback(message, profile);
 }
+
+// Cache for Wikipedia summaries to improve speed
+const wikiCache = new Map<string, string>();
+
+// Helper to fetch a summary from Wikipedia (French) with caching
+async function fetchWikiSummary(query: string): Promise<string> {
+  const key = query.toLowerCase().trim();
+  if (wikiCache.has(key)) return wikiCache.get(key) as string;
+  try {
+    const resp = await fetch(`https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(key)}`);
+    if (!resp.ok) return '';
+    const data = await resp.json();
+    const summary = data.extract || '';
+    wikiCache.set(key, summary);
+    return summary;
+  } catch {
+    return '';
+  }
+}
+

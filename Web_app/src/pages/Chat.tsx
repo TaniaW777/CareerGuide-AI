@@ -4,7 +4,7 @@ import { getChatReply } from '../services/localCareerBackend';
 import aiAvatar from '../assets/ai_avatar.png';
 
 export default function Chat() {
-  const { profile, chatHistory, addChatMessage } = useOfflineStore();
+  const { profile, chatHistory, addChatMessage, clearChatHistory } = useOfflineStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ export default function Chat() {
         {/* ===== Chat Header ===== */}
         <div className="px-6 py-4 flex items-center justify-between bg-gradient-to-r from-blue-50 via-white to-blue-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 border-b border-blue-100 dark:border-gray-700">
           <div className="flex items-center gap-4">
-            {/* AI Avatar - new image style */}
+            {/* AI Avatar */}
             <div className="relative w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-blue-200 dark:ring-blue-700 shadow-lg shadow-blue-500/20 flex-shrink-0">
               <img src={aiAvatar} alt="Conseiller IA" className="w-full h-full object-cover" />
             </div>
@@ -67,13 +67,18 @@ export default function Chat() {
               <h2 className="font-black text-blue-900 dark:text-white text-lg leading-tight">Conseiller IA</h2>
               <p className="text-xs font-bold flex items-center gap-1.5 mt-0.5 text-emerald-600 dark:text-emerald-400">
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
-                Connecté • Mode Hors-ligne (Ollama)
+                En ligne
               </p>
             </div>
           </div>
-          <div className="text-right hidden md:block">
-            <p className="text-xs text-gray-400 font-medium">{chatHistory.length - 1} messages</p>
-          </div>
+          <button
+            onClick={clearChatHistory}
+            className="px-3 py-2 text-xs font-bold bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-xl hover:bg-red-200 dark:hover:bg-red-800/30 transition-all"
+            title="Nouvelle conversation"
+            aria-label="Nouvelle conversation"
+          >
+            Nouvelle discussion
+          </button>
         </div>
 
         {/* ===== Messages area ===== */}
