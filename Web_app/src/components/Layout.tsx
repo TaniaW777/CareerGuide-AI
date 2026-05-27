@@ -2,9 +2,9 @@ import Navbar from './Navbar';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
+    <div className="min-h-screen flex flex-col transition-colors duration-300">
       <Navbar />
-      <main className="flex-1 pt-14 md:pt-16 pb-20 md:pb-0">
+      <main className="flex-1 pt-20 md:pt-20 pb-20 md:pb-0">
         {children}
       </main>
       <footer className="hidden md:block bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 py-12">

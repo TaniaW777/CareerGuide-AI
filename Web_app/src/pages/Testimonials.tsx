@@ -1,25 +1,34 @@
 
+import { getTestimonialIcon } from '../components/Icons';
 
-const testimonials = [
+type Testimonial = {
+  name: string;
+  role: string;
+  text: string;
+  type: 'student' | 'professional' | 'developer';
+  rating: number;
+};
+
+const testimonials: Testimonial[] = [
   {
     name: 'Sarah M.',
     role: 'Étudiante en Terminale',
     text: "CareerGuide m'a aidée à découvrir le métier de Data Scientist, auquel je n'avais jamais pensé. L'IA a vraiment compris mes intérêts pour les maths et l'art.",
-    avatar: '👩‍🎓',
+    type: 'student',
     rating: 5
   },
   {
     name: 'Marc L.',
     role: 'En reconversion',
     text: "Le mode hors-ligne est un vrai plus ! J'ai pu explorer les recommandations pendant mes trajets. L'interface est intuitive et très fluide.",
-    avatar: '👨‍💼',
+    type: 'professional',
     rating: 5
   },
   {
     name: 'Julie D.',
     role: 'Étudiante L3',
     text: "L'assistant IA est bluffant. On a l'impression de discuter avec un vrai conseiller qui prend le temps de comprendre nos besoins.",
-    avatar: '👩‍💻',
+    type: 'developer',
     rating: 4
   }
 ];
@@ -38,8 +47,8 @@ export default function Testimonials() {
         {testimonials.map((t, i) => (
           <div key={i} className="bg-white dark:bg-gray-800 p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-2xl">
-                {t.avatar}
+              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-300">
+                {getTestimonialIcon(t.type, 'w-6 h-6')}
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white">{t.name}</h3>

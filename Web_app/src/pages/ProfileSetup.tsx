@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOfflineStore } from '../store/useOfflineStore';
+import { getInterestIcon } from '../components/Icons';
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
   const { profile, setProfile } = useOfflineStore();
   const [step, setStep] = useState(1);
+  const [educationMode, setEducationMode] = useState<'3ème' | 'Terminale' | 'Autre'>('3ème');
+  const [termSeries, setTermSeries] = useState('A');
+  const [customEducation, setCustomEducation] = useState('');
   const [formData, setFormData] = useState<{
     name: string;
     age: string;
@@ -16,7 +20,7 @@ export default function ProfileSetup() {
   }>({
     name: '',
     age: '',
-    education: '',
+    education: '3ème',
     interests: [],
     skills: '',
     goals: ''
@@ -24,11 +28,30 @@ export default function ProfileSetup() {
 
   useEffect(() => {
     if (profile) {
-      setFormData({
-        ...formData,
+      let mode: '3ème' | 'Terminale' | 'Autre' = '3ème';
+      let serie = 'A';
+      let custom = '';
+
+      if (profile.education.startsWith('Terminale')) {
+        mode = 'Terminale';
+        const parts = profile.education.split(' ');
+        if (parts[1]) {
+          serie = parts[1];
+        }
+      } else if (profile.education.toLowerCase().startsWith('autre')) {
+        mode = 'Autre';
+        custom = profile.education.replace(/^Autre[: -]?\s*/i, '');
+      }
+
+      setEducationMode(mode);
+      setTermSeries(serie);
+      setCustomEducation(custom);
+      setFormData((prev) => ({
+        ...prev,
         ...profile,
-        age: profile.age || '' // Handle if age is missing in old store
-      } as any);
+        age: profile.age || '',
+        education: profile.education || '3ème',
+      }));
     }
   }, [profile]);
 
@@ -76,14 +99,23 @@ export default function ProfileSetup() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Niveau d'études</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {['3ème', 'Terminale', 'Licence', 'Master', 'Autre'].map((level) => (
+                <div className="grid grid-cols-3 gap-4">
+                  {['3ème', 'Terminale', 'Autre'].map((level) => (
                     <button
                       key={level}
                       type="button"
-                      onClick={() => setFormData({...formData, education: level})}
+                      onClick={() => {
+                        setEducationMode(level as '3ème' | 'Terminale' | 'Autre');
+                        if (level === '3ème') {
+                          setFormData({ ...formData, education: '3ème' });
+                        } else if (level === 'Terminale') {
+                          setFormData({ ...formData, education: `Terminale ${termSeries}` });
+                        } else {
+                          setFormData({ ...formData, education: 'Autre' });
+                        }
+                      }}
                       className={`p-4 rounded-2xl border-2 text-left font-bold transition-all
-                        ${formData.education === level
+                        ${educationMode === level
                           ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 shadow-md shadow-indigo-500/10'
                           : 'border-gray-100 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'}
                       `}
@@ -92,6 +124,44 @@ export default function ProfileSetup() {
                     </button>
                   ))}
                 </div>
+
+                {educationMode === 'Terminale' && (
+                  <div className="mt-6">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Choisissez votre série</p>
+                    <div className="grid grid-cols-4 gap-3">
+                      {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((serie) => (
+                        <button
+                          key={serie}
+                          type="button"
+                          onClick={() => {
+                            setTermSeries(serie);
+                            setFormData({ ...formData, education: `Terminale ${serie}` });
+                          }}
+                          className={`px-3 py-2 rounded-2xl text-sm font-bold transition-all ${termSeries === serie ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-gray-600'}`}
+                        >
+                          {serie}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {educationMode === 'Autre' && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Précisez votre niveau</label>
+                    <input
+                      type="text"
+                      value={customEducation}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCustomEducation(value);
+                        setFormData({ ...formData, education: value ? `Autre: ${value}` : 'Autre' });
+                      }}
+                      placeholder="Ex: CAP, Bac Pro, classe prépa, autre formation"
+                      className="w-full px-6 py-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-lg font-medium"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -119,7 +189,9 @@ export default function ProfileSetup() {
                         : 'border-gray-50 dark:border-gray-700 hover:border-indigo-100 dark:hover:border-gray-600'}
                     `}
                   >
-                    <span className="text-2xl">{interest === 'Technologie' ? '💻' : interest === 'Art & Design' ? '🎨' : interest === 'Science' ? '🧪' : interest === 'Business' ? '💼' : interest === 'Santé' ? '🏥' : interest === 'Social' ? '🤝' : interest === 'Écologie' ? '🌱' : interest === 'Sport' ? '⚽' : '📣'}</span>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-300">
+                      {getInterestIcon(interest, 'w-6 h-6')}
+                    </div>
                     <span className="font-bold text-sm text-center">{interest}</span>
                   </button>
                 ))}
