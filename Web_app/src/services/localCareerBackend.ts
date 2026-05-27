@@ -107,98 +107,79 @@ export async function getChatReply(
     ? `Prénom: ${profile.name} | Niveau: ${profile.education} | Intérêts: ${profile.interests.join(', ')} | Compétences: ${profile.skills} | Objectif: ${profile.goals}` 
     : 'Profil non renseigné';
 
-  const systemPrompt = `Tu es un conseiller d'orientation scolaire expert, strict et précis, basé au Burkina Faso. Tu parles uniquement en français. Tu dois TOUJOURS lire tout l'historique de la conversation avant de répondre.
+  // Smart Offline Fallback (Rules-based bot) when Ollama is not available
+  const getFallbackReply = (msg: string) => {
+    const lower = msg.toLowerCase();
+    const name = profile?.name || "toi";
+    const level = profile?.education || "ton niveau";
 
-RÈGLE ABSOLUE : NE JAMAIS INVENTER D'INFORMATIONS. Si tu ne sais pas, dis-le.
+    if (lower.includes('salut') || lower.includes('bonjour') || lower.includes('hello')) {
+      return `Bonjour ${name} ! Je suis ton Conseiller IA CareerGuide. Comment puis-je t'aider dans ton orientation aujourd'hui ?`;
+    }
+    if (lower.includes('bourse') || lower.includes('ciospb') || lower.includes('foner') || lower.includes('auf')) {
+      return "Au Burkina Faso, tu peux demander des aides financières (bourses) via le CIOSPB pour les études universitaires, ou le FONER pour un prêt ou une aide. L'AUF propose aussi des bourses pour la francophonie. As-tu déjà ton BAC ?";
+    }
+    if (lower.includes('série c') || lower.includes('serie c')) {
+      return "La Série C est une filière très scientifique axée sur les Mathématiques et la Physique-Chimie. C'est parfait si tu veux faire de l'ingénierie, de l'informatique ou de la recherche.";
+    }
+    if (lower.includes('série d') || lower.includes('serie d') || lower.includes('biologie') || lower.includes('médecine')) {
+      return "La Série D est orientée vers les Sciences de la Vie et de la Terre. C'est la voie privilégiée pour faire médecine, pharmacie, agronomie ou biologie à l'université.";
+    }
+    if (lower.includes('grh') || lower.includes('gestion') || lower.includes('commerce') || lower.includes('série g')) {
+      return "La Série G et les filières GRH (Gestion des Ressources Humaines) sont axées sur le management, le secrétariat et la comptabilité. Cela n'a rien à voir avec la biologie !";
+    }
+    if (lower.includes('cap') || lower.includes('bep')) {
+      return "Les CAP et BEP sont d'excellentes formations professionnelles courtes (Menuiserie, Comptabilité, Mécanique, etc.) idéales si tu veux apprendre un métier concret rapidement après la 3ème.";
+    }
+    if (lower.includes('université') || lower.includes('fac')) {
+      return "Après le BAC, tu peux t'inscrire dans des universités publiques comme Joseph Ki-Zerbo (Ouaga) ou Nazi Boni (Bobo-Dioulasso), ou dans des instituts privés comme le BIT à Koudougou.";
+    }
+    
+    return `C'est une excellente question pour ton orientation. En tant qu'élève de ${level}, je te conseille de bien analyser tes matières fortes. Veux-tu explorer les filières scientifiques, littéraires ou professionnelles ?`;
+  };
 
-CONNAISSANCE DU SYSTÈME ÉDUCATIF DU BURKINA FASO :
-- Collège : 6ème, 5ème, 4ème, 3ème → diplôme BEPC.
-- Lycée : 2nde, 1ère, Terminale → diplôme BAC.
-- Série A : Littérature, Langues, Philosophie.
-- Série C : Mathématiques et Physique-Chimie pures (scientifique exigeant).
-- Série D : Sciences de la Vie et de la Terre (Biologie, Agronomie, Médecine).
-- Série E : Mathématiques et Technique.
-- Série F : Technologies industrielles.
-- Série G / GRH : Gestion, Commerce, Comptabilité, Ressources Humaines (PAS de sciences de la vie !).
-- CAP / BEP : Formations professionnelles (Comptabilité, Mécanique, Menuiserie, Informatique, etc.).
-- Universités : Joseph Ki-Zerbo (Ouaga), Nazi Boni (Bobo), Thomas Sankara (Ouaga), BIT (Koudougou).
+  const systemContext = `Tu es un conseiller d'orientation scolaire expert, strict et concis, basé au Burkina Faso. 
+RÈGLES STRICTES : Ne génère JAMAIS de markdown (pas de *, pas de #). Réponds en 2 ou 3 phrases simples et directes. N'invente rien. 
+Rappel: Série G/GRH = Gestion/Commerce (PAS Biologie). CIOSPB = Bourse (PAS une école). Série C = Maths/Physique.
+Profil de l'élève : ${profileContext}.`;
 
-BOURSES D'ÉTUDES (Ce sont des AIDES FINANCIÈRES, pas des formations) :
-- CIOSPB : Bourses d'études gouvernementales (nationales et internationales).
-- FONER : Fonds National pour l'Éducation et la Recherche (prêts et aides financières pour étudiants).
-- AUF : Agence Universitaire de la Francophonie (bourses de mobilité).
-
-RÈGLES DE RÉPONSE :
-1. Lis l'historique de la conversation.
-2. Sois très précis. Ne dis jamais que la GRH est de la biologie. Ne dis jamais que le CIOSPB est une formation.
-3. Ne génère JAMAIS de markdown (pas de **, pas de #, pas de *). Écris en texte plat naturel.
-4. Réponds toujours à la question de manière directe et concise.
-
-Profil de l'élève actuel : ${profileContext}`;
-
-  // Build full conversation history for Ollama
-  const conversationMessages = [
-    { role: 'system', content: systemPrompt },
-    // Include previous chat history (skip the first AI greeting, keep last 10 exchanges max)
-    ...history.slice(-20).map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.text
-    })),
-    // Add the new user message
-    { role: 'user', content: message }
-  ];
+  // Gemma models struggle with separate 'system' roles. We merge it into the user prompt or use a single user prompt for context.
+  const recentHistory = history.slice(-6).map(msg => `${msg.sender === 'user' ? 'Élève' : 'Conseiller'}: ${msg.text}`).join('\n');
+  
+  const finalPrompt = `${systemContext}\n\nHistorique récent:\n${recentHistory}\n\nÉlève: ${message}\nConseiller:`;
 
   try {
-    const response = await fetch('http://127.0.0.1:11434/api/chat', {
+    const response = await fetch('http://127.0.0.1:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gemma:2b',
-        messages: conversationMessages,
+        prompt: finalPrompt,
         stream: false,
         options: {
-          temperature: 0.7,
-          top_p: 0.9,
-          num_predict: 300,
+          temperature: 0.3, // Lower temperature to stop hallucinations
+          top_p: 0.8,
+          num_predict: 150,
         }
       }),
     });
 
     if (response.ok) {
       const data = await response.json();
-      const reply = data.message?.content?.trim();
-      if (reply) return reply;
+      let reply = data.response?.trim();
+      
+      // Cleanup common gemma hallucinations if it mimics the user
+      if (reply.startsWith('Conseiller:')) reply = reply.replace('Conseiller:', '').trim();
+      if (reply.includes('Élève:')) reply = reply.split('Élève:')[0].trim();
+      
+      if (reply && reply.length > 5) return reply;
     }
   } catch (error) {
-    console.error('Erreur connexion Ollama:', error);
-
-    // Fallback to FastAPI backend
-    try {
-      const fallbackResponse = await fetch(`${BACKEND_URL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: message, 
-          profile: profile ? {
-            name: profile.name,
-            education: profile.education,
-            interests: profile.interests,
-            skills: profile.skills,
-            goals: profile.goals
-          } : {}
-        }),
-      });
-
-      if (fallbackResponse.ok) {
-        const json = await fallbackResponse.json();
-        if (json.reply) return json.reply;
-      }
-    } catch (backendError) {
-      console.error('Erreur fallback backend:', backendError);
-    }
+    console.error('Erreur connexion Ollama. Utilisation du fallback intégré:', error);
   }
 
-  return "Je rencontre un problème de connexion avec Ollama. Vérifiez qu'Ollama est bien lancé sur votre ordinateur (ollama serve).";
+  // Fallback if Ollama is not installed or fails (Zero-install offline mode)
+  return getFallbackReply(message);
 }
 
 
