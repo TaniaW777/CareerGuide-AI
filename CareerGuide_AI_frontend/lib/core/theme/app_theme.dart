@@ -60,6 +60,14 @@ class AppTheme {
         contentTextStyle: GoogleFonts.workSans(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.onSurfaceLight,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: AppColors.onSurfaceLight),
+        titleTextStyle: GoogleFonts.workSans(color: AppColors.onSurfaceLight, fontSize: 18, fontWeight: FontWeight.bold),
+      ),
     );
   }
 

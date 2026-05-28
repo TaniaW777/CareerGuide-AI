@@ -1,3 +1,4 @@
+import type { Recommendation } from '../services/localCareerBackend';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -27,7 +28,13 @@ interface OfflineState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
-  // Chat history — persists across page navigation, resets only on clearStorage
+  // Persist latest AI analysis and recommendations
+  savedAnalysis: string | null;
+  savedRecommendations: Recommendation[] | null;
+  saveAIResults: (analysis: string, recommendations: Recommendation[]) => void;
+  // AI analysis history – each entry stores the analysis text, recommendations and timestamp
+  analysisHistory: { analysis: string; recommendations: Recommendation[]; timestamp: number }[];
+  addAnalysisEntry: (entry: { analysis: string; recommendations: Recommendation[]; timestamp: number }) => void;
   chatHistory: ChatMessage[];
   addChatMessage: (msg: ChatMessage) => void;
   clearChatHistory: () => void;
@@ -53,6 +60,16 @@ export const useOfflineStore = create<OfflineState>()(
       theme: 'light',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setTheme: (theme) => set({ theme }),
+      // Persist latest AI analysis and recommendations
+      savedAnalysis: null,
+      savedRecommendations: null,
+      saveAIResults: (analysis, recommendations) => set({ savedAnalysis: analysis, savedRecommendations: recommendations }),
+      // Initialize analysis history with empty array
+      analysisHistory: [],
+      // Add a new analysis entry to history (replaces current if needed)
+      addAnalysisEntry: (entry) => set((state) => ({
+        analysisHistory: [...state.analysisHistory.filter(e => e.timestamp !== entry.timestamp), entry]
+      })),
       chatHistory: [DEFAULT_AI_MESSAGE],
       addChatMessage: (msg) => set((state) => ({
         chatHistory: [...state.chatHistory, msg]
@@ -60,7 +77,7 @@ export const useOfflineStore = create<OfflineState>()(
       clearChatHistory: () => set({ chatHistory: [DEFAULT_AI_MESSAGE] }),
       clearStorage: () => {
         localStorage.removeItem('careerguide-storage');
-        set({ profile: null, lastSync: null, theme: 'light', isOffline: !navigator.onLine, chatHistory: [DEFAULT_AI_MESSAGE] });
+        set({ profile: null, lastSync: null, theme: 'light', isOffline: !navigator.onLine, chatHistory: [DEFAULT_AI_MESSAGE], analysisHistory: [] });
       },
     }),
     {

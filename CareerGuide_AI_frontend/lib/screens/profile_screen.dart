@@ -204,6 +204,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Section: Résumé de Profil
+                  _sectionTitle('Résumé de Profil'),
+                  const SizedBox(height: 12),
+                  _buildProfileSummary(),
+
+                  const SizedBox(height: 24),
+
+                  // Section: Parcours Guidé
+                  _sectionTitle('Mon Parcours Guidé'),
+                  const SizedBox(height: 12),
+                  _buildGuidedPath(),
+
+                  const SizedBox(height: 24),
+
                   // Section: Career Badge
                   _sectionTitle('Domaine Recommandé'),
                   const SizedBox(height: 12),
@@ -425,5 +439,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
         (route) => false,
       );
     }
+  }
+
+  Widget _buildProfileSummary() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.analytics_rounded, color: AppColors.primaryLight, size: 20),
+              const SizedBox(width: 8),
+              const Text('Analyse des points forts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryLight)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Votre profil montre une forte inclinaison vers ${_interests.isNotEmpty ? _interests.first : 'les sciences'}, "
+            "avec un bon potentiel d'évolution pour le niveau ${_userData['niveau']}. "
+            "Vous avez un profil analytique avec de bonnes bases pour exceller dans le domaine: $_recommendedSector.",
+            style: const TextStyle(fontSize: 13, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuidedPath() {
+    return Column(
+      children: [
+        _guidedStep(1, 'Évaluation des compétences', 'Effectuée lors de l\'inscription', true),
+        _guidedStep(2, 'Exploration des filières', 'Découvrir les métiers liés à $_recommendedSector', false, isCurrent: true),
+        _guidedStep(3, 'Choix d\'établissement', 'Sélectionner une école ou université adaptée', false),
+      ],
+    );
+  }
+
+  Widget _guidedStep(int step, String title, String subtitle, bool isCompleted, {bool isCurrent = false}) {
+    final color = isCompleted ? Colors.green : (isCurrent ? AppColors.accentLight : Colors.grey);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: isCompleted 
+                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    : Text(step.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ),
+              if (step < 3)
+                Container(
+                  width: 2,
+                  height: 30,
+                  color: isCompleted ? Colors.green : Colors.grey.withValues(alpha: 0.3),
+                ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isCurrent ? AppColors.primaryLight : null)),
+                Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

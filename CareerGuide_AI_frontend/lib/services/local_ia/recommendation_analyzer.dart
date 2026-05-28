@@ -19,19 +19,22 @@ class RecommendationAnalyzer {
 
     final topProgram = recommendations.first['program'];
     final topPercentile = recommendations.first['percentile'];
+    
+    // Get schools info if available
+    final topSchools = (recommendations.first['schools'] as List?)?.map((s) => s['name']).toList() ?? [];
 
     String analysis = _getOpening(level, stream);
     analysis += _getSubjectAndInterestAnalysis(subjects, interests);
-    analysis += _getConclusion(topProgram, topPercentile, level);
+    analysis += _getDetailedPathAnalysis(topProgram, topPercentile, level, topSchools);
 
     return analysis;
   }
 
   static String _getOpening(String level, String stream) {
     final openings = [
-      "En analysant ton profil d'élève en $level ${stream.isNotEmpty ? '(série $stream)' : ''}, ",
-      "Suite à l'évaluation de tes réponses et compte tenu de ton niveau en $level, ",
-      "Ton profil est très intéressant. En tant qu'élève de $level, ",
+      "En analysant minutieusement ton profil d'élève en $level ${stream.isNotEmpty ? '(série $stream)' : ''}, ",
+      "Suite à l'évaluation approfondie de tes aptitudes et compte tenu de ton niveau en $level, ",
+      "Ton profil est très prometteur. En tant qu'élève de $level, ",
     ];
     return openings[_random.nextInt(openings.length)];
   }
@@ -40,23 +43,32 @@ class RecommendationAnalyzer {
     String text = "";
     
     if (subjects.isNotEmpty) {
-      text += "je remarque une forte affinité pour des matières comme ${subjects.join(', ')}. Cela dénote des capacités d'analyse et d'apprentissage dans ces domaines. ";
+      text += "je remarque une excellente disposition pour des matières comme ${subjects.join(', ')}. Cela dénote des capacités solides d'analyse et un haut potentiel de réussite dans des environnements exigeants. ";
     } else {
       text += "ton profil montre une grande polyvalence académique. ";
     }
 
     if (interests.isNotEmpty) {
-      text += "De plus, tes centres d'intérêt pour ${interests.join(' et ')} me permettent de cibler des filières où ta passion sera un moteur de réussite. ";
+      text += "De plus, tes centres d'intérêt pour ${interests.join(' et ')} sont des atouts majeurs. Ils me permettent de cibler des filières où ta passion sera le moteur de ton excellence professionnelle. ";
     }
 
     return text;
   }
 
-  static String _getConclusion(String topProgram, String percentile, String level) {
+  static String _getDetailedPathAnalysis(String topProgram, String percentile, String level, List<dynamic> schools) {
+    String schoolsText = "";
+    if (schools.isNotEmpty) {
+      schoolsText = "Tu pourrais envisager des établissements de référence tels que ${schools.take(2).join(' ou ')}. ";
+    }
+
     if (level == '3ème') {
-      return "\n\nC'est pourquoi la voie vers '$topProgram' (Compatibilité: $percentile) ressort comme ton meilleur choix. Elle capitalise parfaitement sur tes forces pour te préparer au lycée.";
+      return "\n\nC'est pourquoi la série ou filière '$topProgram' (Compatibilité: $percentile) ressort comme la recommandation idéale. Elle capitalise parfaitement sur tes forces pour te préparer au lycée. " +
+             schoolsText + 
+             "Les débouchés après ce parcours incluent des carrières techniques pointues ou de solides études supérieures, t'assurant un emploi stable et valorisant.";
     } else {
-      return "\n\nAinsi, le domaine de '$topProgram' (Compatibilité: $percentile) est hautement recommandé pour toi. Ce parcours universitaire ou professionnel correspond exactement à tes compétences et aspirations futures.";
+      return "\n\nAinsi, le domaine de '$topProgram' (Compatibilité: $percentile) est hautement recommandé. Ce parcours universitaire correspond exactement à tes compétences. " +
+             schoolsText + 
+             "Les débouchés de cette filière sont excellents et te mèneront vers des postes de responsabilité, d'innovation ou d'expertise dans ton secteur d'activité, très demandés sur le marché du travail actuel.";
     }
   }
 }

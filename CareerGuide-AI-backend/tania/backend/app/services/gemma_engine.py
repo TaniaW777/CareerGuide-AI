@@ -38,8 +38,8 @@ def _try_load() -> bool:
         
         options = llm.LlmInferenceOptions(
             model_path=MODEL_PATH,
-            max_tokens=512,
-            temperature=0.7,
+            max_tokens=256,
+            temperature=0.6,
             top_k=40
         )
         _generator = llm.LlmInference.create_from_options(options)

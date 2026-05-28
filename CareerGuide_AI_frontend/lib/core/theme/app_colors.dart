@@ -5,7 +5,7 @@ class AppColors {
   static const Color primaryLight = Color(0xFF0A4B8F); // Academic Blue
   static const Color accentLight = Color(0xFFF5A623);  // Education Gold
   static const Color secondaryLight = Color(0xFF00897B); // Education Teal
-  static const Color backgroundLight = Color(0xFFF8F9FA); 
+  static const Color backgroundLight = Colors.white; 
   static const Color surfaceLight = Colors.white;
   static const Color onPrimaryLight = Colors.white;
   static const Color onSurfaceLight = Color(0xFF1A1C1E);

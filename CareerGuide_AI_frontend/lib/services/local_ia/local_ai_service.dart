@@ -7,6 +7,7 @@ import '../database/local_db.dart';
 import 'scoring_service.dart';
 import 'offline_ai_engine.dart';
 import 'recommendation_analyzer.dart';
+import 'ollama_engine.dart';
 
 class LocalAIService {
   /// Get personalized recommendations based on student profile (Hybrid: Backend first if online)
@@ -108,6 +109,12 @@ class LocalAIService {
 
     debugPrint("🤖 LocalAI: Génération de réponse intelligente offline...");
     try {
+      debugPrint("🦙 Tentative avec Ollama local...");
+      final ollamaReply = await OllamaEngine.generate(message, profile);
+      if (ollamaReply != null && ollamaReply.trim().isNotEmpty) {
+        return ollamaReply;
+      }
+      debugPrint("🦙 Ollama indisponible, bascule sur le moteur interne basé sur des règles.");
       final reply = await OfflineAIEngine.generateChatReply(message, profile);
       return reply;
     } catch (e) {
