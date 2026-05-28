@@ -134,6 +134,88 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* LA SOLUTION (Image 3) */}
+      <section className="py-24 bg-gray-50 dark:bg-gray-900 border-t border-b border-gray-100 dark:border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <span className="text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest text-sm mb-4 block">LA SOLUTION</span>
+            <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-6">
+              CareerGuide AI : Le conseiller d'orientation nouvelle génération
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto font-medium">
+              Le premier assistant intelligent conçu spécifiquement pour le contexte éducatif du Burkina Faso, brisant les barrières de la connectivité.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 hover:-translate-y-2 transition-transform">
+              <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-2xl mb-6">📶</div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3">100% Offline</h3>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Fonctionne sur smartphone <strong className="text-blue-600 dark:text-blue-400">sans connexion internet</strong>, idéal pour les zones rurales.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 hover:-translate-y-2 transition-transform">
+              <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-2xl mb-6">🇧🇫</div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3">Adapté au pays</h3>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Intègre parfaitement le système éducatif du Burkina : <strong className="text-amber-600 dark:text-amber-400">Séries BAC, Bourses et Universités locales</strong>.</p>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 hover:-translate-y-2 transition-transform">
+              <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-2xl flex items-center justify-center text-2xl mb-6">🤝</div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3">Gratuit & Inclusif</h3>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Briser les barrières de l'orientation avec un accès <strong className="text-green-600 dark:text-green-400">gratuit pour tous</strong>, pour plus d'égalité des chances.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INNOVATION TECHNIQUE (Image 4) */}
+      <section className="py-24 bg-white dark:bg-gray-950">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <span className="text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest text-sm mb-4 block">INNOVATION TECHNIQUE</span>
+            <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-6">
+              Une technologie de pointe à votre service
+            </h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="p-8 border-2 border-gray-100 dark:border-gray-800 rounded-3xl relative overflow-hidden group hover:border-blue-500 transition-colors">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg flex items-center justify-center">⚡</div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white">Moteur d'inférence locale</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">L'application utilise <strong className="text-blue-600 dark:text-blue-400">llama.cpp / WebLLM</strong> pour exécuter des réseaux de neurones directement sur le téléphone.</p>
+            </div>
+            
+            <div className="p-8 border-2 border-gray-100 dark:border-gray-800 rounded-3xl relative overflow-hidden group hover:border-amber-500 transition-colors">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg flex items-center justify-center">🧠</div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white">IA Locale Gemma</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">Modèle de langage <strong className="text-amber-600 dark:text-amber-400">Gemma (Google)</strong> optimisé pour fonctionner de manière autonome sans envoi de données.</p>
+            </div>
+            
+            <div className="p-8 border-2 border-gray-100 dark:border-gray-800 rounded-3xl relative overflow-hidden group hover:border-purple-500 transition-colors">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg flex items-center justify-center">📊</div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white">Analyse des intérêts</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">Traitement intelligent combinant un système de <strong className="text-purple-600 dark:text-purple-400">recommandation local</strong> et les calculs académiques.</p>
+            </div>
+            
+            <div className="p-8 border-2 border-gray-100 dark:border-gray-800 rounded-3xl relative overflow-hidden group hover:border-green-500 transition-colors">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg flex items-center justify-center">📍</div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white">Ancrage local</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">Suggestions basées sur les filières et universités locales du Burkina Faso : <strong className="text-green-600 dark:text-green-400">Série C, D, A, G, etc.</strong></p>
+            </div>
+          </div>
+          <div className="text-center mt-12">
+            <span className="inline-block px-4 py-2 bg-blue-900 text-blue-100 text-xs font-black uppercase tracking-wider rounded-lg">Traitement localisé, sans serveurs cloud externes, 100% autonome.</span>
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl bg-blue-800 rounded-[3rem] p-12 md:p-20 relative overflow-hidden text-center shadow-3xl">

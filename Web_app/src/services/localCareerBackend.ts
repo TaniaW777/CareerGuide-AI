@@ -7,6 +7,28 @@ export interface UserProfile {
   goals: string;
 }
 
+export interface School {
+  name: string;
+  city: string;
+  type: 'Lycée' | 'Collège' | 'Lycée Technique' | 'Lycée Professionnel' | 'Université' | 'Institut' | 'Centre de Formation';
+  level: '3ème' | 'Terminale' | 'Supérieur';
+  email?: string;
+  phone?: string;
+  website?: string;
+  description?: string;
+  programs?: string[];
+}
+
+export interface Program {
+  id: string;
+  name: string;
+  level: '3ème' | 'Terminale' | 'Supérieur';
+  type: 'Série' | 'CAP/BEP' | 'Licence' | 'Master' | 'Diplôme';
+  debouches: string[];
+  competences: string[];
+  description?: string;
+}
+
 export interface Scholarship {
   name: string;
   provider: string;
@@ -72,6 +94,148 @@ const scholarships: Scholarship[] = [
     link: 'https://www.auf.org/'
   }
 ];
+
+// Catalogue complet des établissements par niveau et type
+const schools: School[] = [
+  // === NIVEAU 3ème - Lycées & Collèges ===
+  { name: 'Lycée Philippe Zinda Kaboré', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série C', 'Série D', 'Série A'], description: 'Établissement prestigieux, excellent pour sciences et lettres' },
+  { name: 'Prytanée Militaire du Kadiogo', city: 'Kadiogo', type: 'Lycée', level: '3ème', programs: ['Série C', 'Série D'], description: 'Lycée militaire réputé, discipline rigoureuse, excellents résultats' },
+  { name: 'Lycée Bogodogo', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série D', 'Série A'], description: 'Lycée généraliste avec bons programmes en sciences' },
+  { name: 'Lycée Ouezzin Coulibaly', city: 'Bobo-Dioulasso', type: 'Lycée', level: '3ème', programs: ['Série C', 'Série D'], description: 'Lycée de référence dans le sud du Burkina' },
+  { name: 'Lycée Nelson Mandela', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série A', 'Série G'], description: 'Fort en littérature et sciences humaines' },
+  { name: 'Lycée Technique de Ouagadougou', city: 'Ouagadougou', type: 'Lycée Technique', level: '3ème', programs: ['Série F', 'Série E'], description: 'Spécialisé en filières techniques et technologiques' },
+  { name: 'Lycée Provincial', city: 'Koudougou', type: 'Lycée', level: '3ème', programs: ['Série A', 'Série C', 'Série G'], description: 'Établissement régional bien équipé' },
+  { name: 'Lycée Professionnel National', city: 'Ouagadougou', type: 'Lycée Professionnel', level: '3ème', programs: ['CAP Comptabilité', 'CAP Mécanique'], description: 'Formation professionnelle de qualité' },
+  { name: 'Lycée Professionnel Régional', city: 'Bobo-Dioulasso', type: 'Lycée Professionnel', level: '3ème', programs: ['CAP Dessin', 'CAP Bâtiment'], description: 'Excellente réputation en métiers du bâtiment' },
+  { name: 'Centre de Formation Professionnelle du Plateau', city: 'Ouagadougou', type: 'Centre de Formation', level: '3ème', programs: ['CAP Mécanique Auto', 'CAP Électricité'], description: 'Formation pratique directe au marché' },
+  { name: 'Centre de Formation Métiers Bois', city: 'Bobo-Dioulasso', type: 'Centre de Formation', level: '3ème', programs: ['CAP Menuiserie', 'BEP Ébénisterie'], description: 'Spécialisé dans les métiers du bois et artisanat' },
+  { name: 'Lycée Privé de la Jeunesse (Internat)', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série D', 'Série A'], description: 'Lycée avec internat offrant un encadrement strict' },
+  { name: 'Collège Privé Elite', city: 'Koudougou', type: 'Collège', level: '3ème', programs: ['Général'], description: 'Collège de proximité avec de bons résultats' },
+  
+  // === NIVEAU TERMINALE - Universités & Instituts ===
+  { name: 'Université Joseph Ki-Zerbo', city: 'Ouagadougou', type: 'Université', level: 'Terminale', programs: ['Informatique', 'Médecine', 'Droit', 'Communication'], description: 'Université publique principale, très complète' },
+  { name: 'Université Nazi Boni', city: 'Bobo-Dioulasso', type: 'Université', level: 'Terminale', programs: ['Agronomie', 'Médecine', 'Sciences'], description: 'Université de référence du sud, forte en sciences' },
+  { name: 'Université Thomas Sankara', city: 'Ouagadougou', type: 'Université', level: 'Terminale', programs: ['Économie', 'Gestion', 'Commerce'], description: 'Spécialisée en sciences économiques et gestion' },
+  { name: 'Burkina Institute of Technology (BIT)', city: 'Koudougou', type: 'Institut', level: 'Terminale', programs: ['Génie Informatique', 'Génie Civil'], description: 'Institut technologique privé réputé' },
+  { name: 'Institut Supérieur d\'Ingénierie', city: 'Ouagadougou', type: 'Institut', level: 'Terminale', programs: ['Génie Civil', 'Génie Électrique'], description: 'Formation d\'ingénieurs de haut niveau' },
+  { name: 'École Supérieure Polytechnique', city: 'Dédougou', type: 'Institut', level: 'Terminale', programs: ['Génie Civil', 'Génie Mécanique'], description: 'École polytechnique prestigieuse' },
+  { name: 'ISTIC (Institut Supérieur des Télécommunications et d\'Informatique)', city: 'Ouagadougou', type: 'Institut', level: 'Terminale', programs: ['Informatique', 'Télécommunications', 'Réseaux'], description: 'Excellence en informatique et télécom' },
+  { name: 'Institut du Développement Rural', city: 'Bobo-Dioulasso', type: 'Institut', level: 'Terminale', programs: ['Agronomie', 'Zootechnie', 'Foresterie'], description: 'Référence en sciences agronomiques' },
+];
+
+// Catalogue des filières/séries avec débouchés détaillés
+const programs: Program[] = [
+  // Séries 3ème
+  { 
+    id: 'serie-c',
+    name: 'Série C (Maths/Physique)',
+    level: '3ème',
+    type: 'Série',
+    competences: ['Mathématiques', 'Physique-Chimie', 'Sciences', 'Logique'],
+    debouches: ['Ingénieur informatique', 'Ingénieur civil', 'Mathématicien', 'Physicien', 'Chercheur scientifique', 'Professeur sciences'],
+    description: 'Filière scientifique exigeante pour les passionnés de maths et sciences exactes.'
+  },
+  { 
+    id: 'serie-d',
+    name: 'Série D (Sciences de la Vie)',
+    level: '3ème',
+    type: 'Série',
+    competences: ['Biologie', 'Chimie', 'Sciences Naturelles', 'Écologie'],
+    debouches: ['Médecin', 'Pharmacien', 'Biologiste', 'Vétérinaire', 'Agronome', 'Chercheur', 'Infirmier'],
+    description: 'Idéale pour les amateurs de biologie et sciences du vivant.'
+  },
+  { 
+    id: 'serie-a',
+    name: 'Série A (Littérature/Langues)',
+    level: '3ème',
+    type: 'Série',
+    competences: ['Français', 'Littérature', 'Philosophie', 'Histoire-Géographie', 'Langues'],
+    debouches: ['Journaliste', 'Écrivain', 'Professeur', 'Traducteur', 'Critique', 'Historien', 'Animateur'],
+    description: 'Pour les passionnés de lettres, langues et sciences humaines.'
+  },
+  { 
+    id: 'serie-g',
+    name: 'Série G (Gestion/Commerce)',
+    level: '3ème',
+    type: 'Série',
+    competences: ['Comptabilité', 'Économie', 'Gestion', 'Commerce'],
+    debouches: ['Comptable', 'Gestionnaire', 'Chef d\'entreprise', 'Commerçant', 'Secrétaire direction', 'Agent douane'],
+    description: 'Débouche vers métiers de gestion, commerce et administration.'
+  },
+  
+  // CAP/BEP
+  { 
+    id: 'cap-mecanique',
+    name: 'CAP/BEP Mécanique Auto',
+    level: '3ème',
+    type: 'CAP/BEP',
+    competences: ['Mécanique', 'Diagnostic', 'Réparation', 'Électricité auto'],
+    debouches: ['Mécanicien automobile', 'Carrossier', 'Électricien auto', 'Responsable atelier', 'Entrepreneur'],
+    description: 'Formation pratique directe aux métiers de l\'automobile.'
+  },
+  { 
+    id: 'cap-dessin-batiment',
+    name: 'CAP Dessin Bâtiment',
+    level: '3ème',
+    type: 'CAP/BEP',
+    competences: ['Dessin technique', 'Bâtiment', 'CAO', 'Construction'],
+    debouches: ['Dessinateur bâtiment', 'Technicien BTP', 'Chef de chantier', 'Architecte', 'Constructeur'],
+    description: 'Formation en dessin technique et bâtiment.'
+  },
+  { 
+    id: 'cap-comptabilite',
+    name: 'CAP Comptabilité',
+    level: '3ème',
+    type: 'CAP/BEP',
+    competences: ['Comptabilité', 'Gestion', 'Informatique', 'Fiscalité'],
+    debouches: ['Comptable', 'Aide-comptable', 'Gestionnaire', 'Expert-comptable', 'Auditeur'],
+    description: 'Formation en comptabilité générale et gestion.'
+  },
+  
+  // Licences Université
+  { 
+    id: 'licence-informatique',
+    name: 'Licence Informatique/Génie Logiciel',
+    level: 'Terminale',
+    type: 'Licence',
+    competences: ['Programmation', 'Bases données', 'Réseaux', 'Conception logicielle'],
+    debouches: ['Développeur', 'Ingénieur informatique', 'Chef projet IT', 'Data scientist', 'Administrateur systèmes'],
+    description: 'Formation complète en informatique et développement logiciel.'
+  },
+  { 
+    id: 'licence-medecine',
+    name: 'Médecine & Sciences Santé',
+    level: 'Terminale',
+    type: 'Licence',
+    competences: ['Biologie', 'Chimie', 'Anatomie', 'Physiologie'],
+    debouches: ['Médecin', 'Pharmacien', 'Infirmier', 'Biologiste médical', 'Chercheur santé'],
+    description: 'Programmes rigoureux en sciences médicales.'
+  },
+  { 
+    id: 'licence-agronomie',
+    name: 'Sciences Agronomiques',
+    level: 'Terminale',
+    type: 'Licence',
+    competences: ['Agronomie', 'Écologie', 'Élevage', 'Gestion exploitation'],
+    debouches: ['Agronome', 'Chercheur agricole', 'Gestionnaire exploitation', 'Conseiller agricole', 'Entrepreneur agricole'],
+    description: 'Formation en agriculture moderne et développement rural.'
+  },
+];
+
+export function getAllSchools(level?: '3ème' | 'Terminale' | 'Supérieur'): School[] {
+  if (!level) return schools;
+  return schools.filter(s => s.level === level || (level === 'Supérieur' && s.level === 'Terminale'));
+}
+
+export function getSchoolsByType(type: School['type']): School[] {
+  return schools.filter(s => s.type === type);
+}
+
+export function getAllPrograms(level?: '3ème' | 'Terminale' | 'Supérieur'): Program[] {
+  if (!level) return programs;
+  return programs.filter(p => p.level === level || (level === 'Supérieur' && p.level === 'Terminale'));
+}
+
 
 function scoreProgram(profile: UserProfile, tags: string[]) {
   const interestMatch = tags.filter(tag => profile.interests.map(i => i.toLowerCase()).includes(tag.toLowerCase())).length;
@@ -176,16 +340,25 @@ export async function getChatReply(
   profile: UserProfile | null,
   history: { sender: string; text: string }[] = []
 ): Promise<string> {
-// Duplicate declarations removed
+  const name = profile?.name || 'ami(e)';
+  const level = profile?.education || 'ton niveau';
+  const interests = profile?.interests?.slice(0, 2)?.join(', ') || 'tes centres d\'intérêt';
+  
+  // More human-like system prompt with conversational tone
+  const systemContext = `Tu es le Conseiller IA de CareerGuide, un expert bienveillant, humain et amical en orientation scolaire au Burkina Faso.
+L'utilisateur s'appelle ${name} (niveau: ${level}, intérêts: ${interests}).
 
-  // Build a SHORT prompt (crucial for gemma:2b)
-  const name = profile?.name || 'inconnu';
-  const level = profile?.education || 'niveau inconnu';
-  const systemContext = `Tu es un conseiller scolaire au Burkina Faso. L'eleve s'appelle ${name} et est en ${level}. Reponds en francais en 2-3 phrases.`;
+Règles strictes :
+- Sois très chaleureux, empathique et naturel (comme un humain qui discute et donne des conseils).
+- Fournis exactement les informations demandées par l'utilisateur (ex: liste d'établissements, bourses disponibles, filières).
+- Utilise le tutoiement ("tu").
+- Sois concis et direct (maximum 3 à 4 phrases).
+- Ne fais pas de longues listes, privilégie des réponses sous forme de paragraphes naturels.
+- N'ajoute pas de salutations répétitives si la conversation est déjà en cours.`;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s max
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s max pour éviter trop d'attente
 
     const response = await fetch('http://127.0.0.1:11434/api/chat', {
       method: 'POST',
@@ -194,15 +367,19 @@ export async function getChatReply(
         model: 'gemma:2b',
         messages: [
           { role: 'system', content: systemContext },
-          // Include only the last 6 exchanged messages (max 12 entries)
-          ...history.slice(-12).map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.text })),
+          // Include only last 8 exchanges for context (max 16 entries)
+          ...history.slice(-16).map(msg => ({ 
+            role: msg.sender === 'user' ? 'user' : 'assistant', 
+            content: msg.text 
+          })),
           { role: 'user', content: message }
         ],
         stream: false,
         options: {
-          temperature: 0.3,
-          top_p: 0.8,
-          num_predict: 150
+          temperature: 0.5,  // Slightly higher for more natural conversation
+          top_p: 0.9,
+          num_predict: 150,  // Shorter responses for speed
+          repeat_penalty: 1.15
         }
       }),
       signal: controller.signal,
@@ -214,36 +391,30 @@ export async function getChatReply(
       const data = await response.json();
       let reply = data.response?.trim();
 
-      // Basic cleanup
-      if (reply) {
-        // Remove role prefixes if model hallucinates them
-        reply = reply.replace(/^(Conseiller|Assistant|Réponse)\s*:\s*/i, '').trim();
-        // Stop if model starts role-playing as the student
-        if (reply.includes('Élève:') || reply.includes('Eleve:')) {
-          reply = reply.split(/[EÉ]l[eè]ve\s*:/i)[0].trim();
+      if (reply && reply.length > 8) {
+        // Clean up potential model artifacts
+        reply = reply.replace(/^(Conseiller|Assistant|AI|[*#]+)\s*:\s*/gi, '').trim();
+        reply = reply.replace(/^\n+/, '').replace(/\n+$/, '').trim();
+        
+        // If response is too short after cleanup, use fallback
+        if (reply.length > 10) {
+          return reply;
         }
-        // Remove markdown artifacts
-        reply = reply.replace(/[*#]/g, '').trim();
-
-        if (reply.length > 10) return reply;
       }
     }
   } catch (error) {
-    console.log('Ollama non disponible, utilisation du bot integre.');
+    // Ollama timeout or error - use fallback silently
+    console.log('Ollama non disponible ou timeout.');
   }
 
-  // Try Wikipedia fallback for generic queries
-  const wikiAnswer = await fetchWikiSummary(message);
-  if (wikiAnswer) return wikiAnswer;
-
-  // Fallback: Smart rules-based bot (works without Ollama)
+  // Fallback: Smart rules-based response (works offline)
   return getSmartFallback(message, profile);
 }
 
-// Cache for Wikipedia summaries to improve speed
+// Cache for Wikipedia summaries
 const wikiCache = new Map<string, string>();
 
-// Helper to fetch a summary from Wikipedia (French) with caching
+// Helper to fetch Wikipedia summary
 async function fetchWikiSummary(query: string): Promise<string> {
   const key = query.toLowerCase().trim();
   if (wikiCache.has(key)) return wikiCache.get(key) as string;
@@ -252,10 +423,156 @@ async function fetchWikiSummary(query: string): Promise<string> {
     if (!resp.ok) return '';
     const data = await resp.json();
     const summary = data.extract || '';
-    wikiCache.set(key, summary);
-    return summary;
+    if (summary) wikiCache.set(key, summary.substring(0, 200));
+    return wikiCache.get(key) || '';
   } catch {
     return '';
   }
 }
 
+// ===================================================================
+// AI RECOMMENDATION ANALYSIS & DYNAMIC QUESTIONS
+// ===================================================================
+export async function generateDynamicQuestions(level: string): Promise<string[]> {
+  const systemContext = `Tu es un conseiller d'orientation au Burkina Faso. Génère exactement 3 questions courtes et pertinentes pour aider un élève de niveau "${level}" à trouver sa voie. Renvoie UNIQUEMENT les 3 questions, une par ligne, sans introduction ni conclusion.`;
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s max
+
+    const response = await fetch('http://127.0.0.1:11434/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gemma:2b',
+        messages: [{ role: 'user', content: systemContext }],
+        stream: false,
+        options: { temperature: 0.6, num_predict: 150 }
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      const reply = data.message?.content?.trim() || data.response?.trim();
+      if (reply) {
+        const questions = reply.split('\n')
+          .map((q: string) => q.replace(/^[\d\-\.\*]+\s*/, '').trim())
+          .filter((q: string) => q.length > 5);
+        if (questions.length >= 2) return questions.slice(0, 3);
+      }
+    }
+  } catch (error) {
+    console.log('Erreur génération questions dynamiques:', error);
+  }
+
+  // Fallback sensible to the level
+  if (level.includes('3ème') || level.includes('3eme')) {
+    return [
+      "Quelles sont tes matières préférées au collège ?",
+      "Préfères-tu la théorie ou la pratique ?",
+      "Quel métier te fait rêver pour plus tard ?"
+    ];
+  } else {
+    return [
+      "Quelles sont tes matières fortes au lycée ?",
+      "Préfères-tu les études longues (Université) ou courtes (Institut) ?",
+      "Dans quel domaine aimerais-tu travailler ?"
+    ];
+  }
+}
+
+export async function generateAIRecommendationAnalysis(profile: UserProfile, specificLevel?: string, questionnaireAnswers?: string): Promise<string> {
+  const name = profile.name || 'Élève';
+  const level = specificLevel || profile.education || 'Non précisé';
+  const interests = profile.interests.length ? profile.interests.join(', ') : 'Aucun renseigné';
+  const skills = profile.skills || 'Non précisées';
+  const goals = profile.goals || 'Non précisés';
+
+  const systemContext = `Tu es un expert amical en orientation scolaire au Burkina Faso.`;
+  // If questionnaireAnswers is provided, use it as the primary input and produce a concise analysis
+  const prompt = questionnaireAnswers
+    ? `Analyse de manière synthétique et chaleureuse (3-4 phrases) les réponses suivantes de l'élève (${level}) et fournis un texte d'analyse pour des recommandations de filières au Burkina Faso. Ne pose PAS de questions supplémentaires.
+Réponses de l'élève: ${questionnaireAnswers}
+Profil stocké: passions(${interests}), compétences(${skills}).` 
+    : `Analyse le profil de ${name} pour lui faire des recommandations d'orientation méticuleuses.
+Niveau: ${level}
+Passions/Intérêts: ${interests}
+Compétences: ${skills}
+Vœux/Objectifs: ${goals}
+Fais une analyse personnalisée d'environ 3 phrases.`;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s max for analysis
+
+    const response = await fetch('http://127.0.0.1:11434/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gemma:2b',
+        messages: [
+          { role: 'system', content: systemContext },
+          { role: 'user', content: prompt }
+        ],
+        stream: false,
+        options: {
+          temperature: 0.5,
+          top_p: 0.9,
+          num_predict: 250
+        }
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      let reply = data.message?.content?.trim() || data.response?.trim();
+
+      if (reply) {
+        reply = reply.replace(/^(Conseiller|Expert|Analyse)\s*:\s*/i, '').trim();
+        reply = reply.replace(/[*#]/g, '').trim();
+        if (reply.length > 20) return reply;
+      }
+    }
+  } catch (error) {
+    console.log('Erreur lors de la génération de l\'analyse IA:', error);
+  }
+
+  // Fallback si l'IA échoue
+  return `D'après ton niveau (${level}) et tes passions (${interests}), je te conseille d'explorer les filières qui correspondent le mieux à tes compétences. Prends le temps de te renseigner sur les établissements adaptés à tes objectifs au Burkina Faso.`;
+}
+
+export function getDynamicRecommendations(profile: UserProfile, answer: string, specificLevel?: string): Recommendation[] {
+  const level = normalizeEducation(specificLevel || profile.education);
+  let basePrograms = level === '3ème' ? collegePrograms : lyceePrograms;
+  const answerLower = answer.toLowerCase();
+
+  const scoredPrograms = basePrograms.map(program => {
+    let score = scoreProgram(profile, program.tags as string[]);
+    // Boost score based on user's answer to the AI's questions
+    const matchCount = (program.tags as string[]).filter(tag => answerLower.includes(tag.toLowerCase())).length;
+    score += matchCount * 0.15; // +15% per matching keyword in their answer
+    
+    // Cap score at 99%
+    score = Math.min(0.99, score);
+    
+    return {
+      ...program,
+      score
+    };
+  })
+  .sort((a, b) => b.score - a.score);
+
+  // Return top 3 or 5 depending on the highest score
+  const topScore = scoredPrograms[0]?.score || 0;
+  const count = topScore > 0.8 ? 5 : 3;
+  return scoredPrograms.slice(0, count);
+}
+
+export function getScholarships(): Scholarship[] {
+  return scholarships;
+}
