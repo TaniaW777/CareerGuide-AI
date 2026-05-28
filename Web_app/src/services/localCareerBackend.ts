@@ -437,8 +437,13 @@ async function fetchWikiSummary(query: string): Promise<string> {
 // ===================================================================
 // AI RECOMMENDATION ANALYSIS & DYNAMIC QUESTIONS
 // ===================================================================
-export async function generateDynamicQuestions(level: string): Promise<string[]> {
-  const systemContext = `Tu es un conseiller d'orientation au Burkina Faso. Génère exactement 3 questions courtes et pertinentes pour aider un élève de niveau "${level}" à trouver sa voie. Renvoie UNIQUEMENT les 3 questions, une par ligne, sans introduction ni conclusion.`;
+export async function generateDynamicQuestions(profile: UserProfile): Promise<string[]> {
+  const education = profile.education || 'Non précisé';
+  const interests = profile.interests.length ? profile.interests.join(', ') : 'sans préférence particulière';
+  const skills = profile.skills || 'non indiqué';
+  const goals = profile.goals || 'non précisé';
+
+  const systemContext = `Tu es un conseiller d'orientation au Burkina Faso. Génère exactement 3 questions courtes, simples et personnalisées pour aider un élève de niveau "${education}" à trouver sa voie. Utilise ses passions (${interests}), ses compétences (${skills}) et ses objectifs (${goals}) pour formuler des questions qui permettent de choisir une série, une filière, ou un établissement. Renvoie UNIQUEMENT les 3 questions, une par ligne, sans introduction ni conclusion.`;
   
   try {
     const controller = new AbortController();
@@ -471,8 +476,8 @@ export async function generateDynamicQuestions(level: string): Promise<string[]>
     console.log('Erreur génération questions dynamiques:', error);
   }
 
-  // Fallback sensible to the level
-  if (level.includes('3ème') || level.includes('3eme')) {
+  // Fallback sensible à l'éducation
+  if (education.includes('3ème') || education.includes('3eme')) {
     return [
       "Quelles sont tes matières préférées au collège ?",
       "Préfères-tu la théorie ou la pratique ?",
@@ -497,15 +502,14 @@ export async function generateAIRecommendationAnalysis(profile: UserProfile, spe
   const systemContext = `Tu es un expert amical en orientation scolaire au Burkina Faso.`;
   // If questionnaireAnswers is provided, use it as the primary input and produce a concise analysis
   const prompt = questionnaireAnswers
-    ? `Analyse de manière synthétique et chaleureuse (3-4 phrases) les réponses suivantes de l'élève (${level}) et fournis un texte d'analyse pour des recommandations de filières au Burkina Faso. Ne pose PAS de questions supplémentaires.
+    ? `Analyse de manière synthétique et chaleureuse (3-4 phrases) les réponses suivantes de l'élève (${level}) et fournis un texte d'analyse pour des recommandations de filières, séries ou établissements au Burkina Faso. Utilise ses passions (${interests}), ses compétences (${skills}) et ses objectifs (${goals}). Ne parle PAS de bourses et ne pose PAS de questions supplémentaires.
 Réponses de l'élève: ${questionnaireAnswers}
-Profil stocké: passions(${interests}), compétences(${skills}).` 
-    : `Analyse le profil de ${name} pour lui faire des recommandations d'orientation méticuleuses.
-Niveau: ${level}
+Profil stocké: passions(${interests}), compétences(${skills}), objectifs(${goals}).` 
+    : `Analyse le profil de ${name} pour lui faire des recommandations d'orientation méticuleuses vers des filières, séries ou établissements. Niveau: ${level}
 Passions/Intérêts: ${interests}
 Compétences: ${skills}
 Vœux/Objectifs: ${goals}
-Fais une analyse personnalisée d'environ 3 phrases.`;
+Fais une analyse personnalisée, claire et chaleureuse d'environ 3 phrases. Ne mentionne pas les bourses.`;
 
   try {
     const controller = new AbortController();
@@ -554,16 +558,25 @@ export function getDynamicRecommendations(profile: UserProfile, answer: string, 
   const level = normalizeEducation(specificLevel || profile.education);
   let basePrograms = level === '3ème' ? collegePrograms : lyceePrograms;
   const answerLower = answer.toLowerCase();
+  const interestsLower = profile.interests.map(i => i.toLowerCase()).join(' ');
+  const goalsLower = profile.goals.toLowerCase();
 
   const scoredPrograms = basePrograms.map(program => {
     let score = scoreProgram(profile, program.tags as string[]);
-    // Boost score based on user's answer to the AI's questions
     const matchCount = (program.tags as string[]).filter(tag => answerLower.includes(tag.toLowerCase())).length;
-    score += matchCount * 0.15; // +15% per matching keyword in their answer
-    
-    // Cap score at 99%
+    const interestMatch = (program.tags as string[]).filter(tag => interestsLower.includes(tag.toLowerCase())).length;
+    const goalMatch = (program.tags as string[]).filter(tag => goalsLower.includes(tag.toLowerCase())).length;
+
+    score += matchCount * 0.12;
+    score += interestMatch * 0.1;
+    score += goalMatch * 0.08;
+
+    // Add a small boost if the program name or description contains one of the user's custom interests
+    const customMatch = profile.interests.filter(interest => !['technologie','art & design','science','business','santé','social','écologie','sport','médias'].includes(interest.toLowerCase()))
+      .filter(interest => program.program.toLowerCase().includes(interest.toLowerCase()) || (program.tags as string[]).some(tag => tag.toLowerCase().includes(interest.toLowerCase()))).length;
+    score += customMatch * 0.12;
+
     score = Math.min(0.99, score);
-    
     return {
       ...program,
       score
@@ -571,10 +584,7 @@ export function getDynamicRecommendations(profile: UserProfile, answer: string, 
   })
   .sort((a, b) => b.score - a.score);
 
-  // Return top 3 or 5 depending on the highest score
-  const topScore = scoredPrograms[0]?.score || 0;
-  const count = topScore > 0.8 ? 5 : 3;
-  return scoredPrograms.slice(0, count);
+  return scoredPrograms.slice(0, 5);
 }
 
 export function getScholarships(): Scholarship[] {
