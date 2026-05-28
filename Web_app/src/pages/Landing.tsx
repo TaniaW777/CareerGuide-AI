@@ -74,8 +74,8 @@ export default function Landing() {
                       <CheckBadgeIcon className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 font-black">RECOMMANDÉ</p>
-                      <p className="font-bold text-gray-900 dark:text-white">Designer UX/UI</p>
+                      <p className="text-xs text-gray-500 font-black">RECOMMANDATION_IA</p>
+                      <p className="font-bold text-gray-900 dark:text-white">VOTRE GUIDE VERS UN AVENIR PROMETEUR</p>
                     </div>
                   </div>
                 </Link>

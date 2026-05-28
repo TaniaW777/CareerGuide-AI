@@ -28,6 +28,8 @@ interface OfflineState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
+  aiEngineStatus: 'ollama' | 'groq' | 'offline' | 'checking';
+  setAIEngineStatus: (status: 'ollama' | 'groq' | 'offline' | 'checking') => void;
   // Persist latest AI analysis and recommendations
   savedAnalysis: string | null;
   savedRecommendations: Recommendation[] | null;
@@ -60,6 +62,8 @@ export const useOfflineStore = create<OfflineState>()(
       theme: 'light',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setTheme: (theme) => set({ theme }),
+      aiEngineStatus: 'checking',
+      setAIEngineStatus: (status) => set({ aiEngineStatus: status }),
       // Persist latest AI analysis and recommendations
       savedAnalysis: null,
       savedRecommendations: null,
@@ -77,7 +81,7 @@ export const useOfflineStore = create<OfflineState>()(
       clearChatHistory: () => set({ chatHistory: [DEFAULT_AI_MESSAGE] }),
       clearStorage: () => {
         localStorage.removeItem('careerguide-storage');
-        set({ profile: null, lastSync: null, theme: 'light', isOffline: !navigator.onLine, chatHistory: [DEFAULT_AI_MESSAGE], analysisHistory: [] });
+        set({ profile: null, lastSync: null, theme: 'light', isOffline: !navigator.onLine, chatHistory: [DEFAULT_AI_MESSAGE], analysisHistory: [], aiEngineStatus: 'checking' });
       },
     }),
     {

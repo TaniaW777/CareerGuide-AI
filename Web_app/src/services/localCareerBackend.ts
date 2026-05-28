@@ -335,8 +335,40 @@ function getSmartFallback(msg: string, profile: UserProfile | null): string {
 }
 
 // ===================================================================
-// GROQ API CALL HELPER
+// HYBRID AI CALL HELPER (Ollama -> Groq -> Fallback)
 // ===================================================================
+import { useOfflineStore } from '../store/useOfflineStore';
+
+async function fetchOllama(messages: { role: string; content: string }[], maxTokens = 150, temperature = 0.5): Promise<string> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for local Ollama
+
+  const response = await fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gemma:2b',
+      messages: messages,
+      stream: false,
+      options: {
+        temperature: temperature,
+        top_p: 0.9,
+        num_predict: maxTokens
+      }
+    }),
+    signal: controller.signal,
+  });
+
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    throw new Error('Erreur API Ollama');
+  }
+
+  const data = await response.json();
+  return data.message?.content?.trim() || data.response?.trim() || '';
+}
+
 async function fetchGroq(messages: { role: string; content: string }[], maxTokens = 150, temperature = 0.5): Promise<string> {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
   if (!apiKey) {
@@ -364,6 +396,30 @@ async function fetchGroq(messages: { role: string; content: string }[], maxToken
 
   const data = await response.json();
   return data.choices?.[0]?.message?.content || '';
+}
+
+export async function fetchAI(messages: { role: string; content: string }[], maxTokens = 150, temperature = 0.5): Promise<string> {
+  const store = useOfflineStore.getState();
+  
+  // Try Ollama First
+  try {
+    const reply = await fetchOllama(messages, maxTokens, temperature);
+    store.setAIEngineStatus('ollama');
+    return reply;
+  } catch (err) {
+    console.log('Ollama local non disponible. Essai avec Groq API...', err);
+  }
+
+  // Try Groq Second
+  try {
+    const reply = await fetchGroq(messages, maxTokens, temperature);
+    store.setAIEngineStatus('groq');
+    return reply;
+  } catch (err) {
+    console.log('Groq API non disponible. Mode hors-ligne activé.', err);
+    store.setAIEngineStatus('offline');
+    throw new Error('All AI engines failed');
+  }
 }
 
 // ===================================================================
@@ -399,7 +455,7 @@ Règles strictes :
       { role: 'user', content: message }
     ];
 
-    let reply = await fetchGroq(messages, 200, 0.6);
+    let reply = await fetchAI(messages, 200, 0.6);
     reply = reply.trim();
 
     if (reply && reply.length > 8) {
@@ -452,7 +508,7 @@ export async function generateDynamicQuestions(profile: UserProfile): Promise<st
   const systemContext = `Tu es un conseiller d'orientation au Burkina Faso. Génère exactement 3 questions courtes, simples et personnalisées pour aider un élève de niveau "${education}" à trouver sa voie. Utilise ses passions (${interests}), ses compétences (${skills}) et ses objectifs (${goals}) pour formuler des questions qui permettent de choisir une série, une filière, ou un établissement. Renvoie UNIQUEMENT les 3 questions, une par ligne, sans introduction ni conclusion.`;
   
   try {
-    const reply = await fetchGroq([{ role: 'user', content: systemContext }], 150, 0.6);
+    const reply = await fetchAI([{ role: 'user', content: systemContext }], 150, 0.6);
     if (reply) {
       const questions = reply.split('\n')
         .map((q: string) => q.replace(/^[\d\-\.\*]+\s*/, '').trim())
@@ -499,7 +555,7 @@ Vœux/Objectifs: ${goals}
 Fais une analyse personnalisée, claire et chaleureuse d'environ 3 phrases. Ne mentionne pas les bourses.`;
 
   try {
-    let reply = await fetchGroq([
+    let reply = await fetchAI([
       { role: 'system', content: systemContext },
       { role: 'user', content: prompt }
     ], 250, 0.5);
@@ -552,4 +608,24 @@ export function getDynamicRecommendations(profile: UserProfile, answer: string, 
 
 export function getScholarships(): Scholarship[] {
   return scholarships;
+}
+
+// ===================================================================
+// AI SEARCH FUNCTION
+// ===================================================================
+export async function searchAIInfo(query: string, context: 'établissement' | 'filière'): Promise<string> {
+  const systemContext = `Tu es un expert du système éducatif au Burkina Faso. 
+L'utilisateur recherche des informations sur un(e) ${context} : "${query}".
+Règles :
+- Réponds avec précision, véracité et concision (3 à 4 phrases).
+- Ne dis pas "je ne sais pas". Si tu ne connais pas cet(te) ${context} spécifique, donne des informations générales utiles sur ce type de ${context} au Burkina Faso.`;
+
+  try {
+    const reply = await fetchAI([{ role: 'system', content: systemContext }, { role: 'user', content: query }], 250, 0.4);
+    if (reply) return reply;
+  } catch (error) {
+    console.log('AI search failed', error);
+  }
+
+  return `Aucune information détaillée n'a pu être trouvée en mode hors-ligne pour "${query}". Veuillez vérifier l'orthographe ou vous connecter à internet.`;
 }

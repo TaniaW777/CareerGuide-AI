@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useOfflineStore } from '../store/useOfflineStore';
-import { getAllSchools } from '../services/localCareerBackend';
+import { getAllSchools, searchAIInfo } from '../services/localCareerBackend';
 import type { School } from '../services/localCareerBackend';
 import { ProfileUserIcon } from '../components/Icons';
 
@@ -10,14 +10,31 @@ export default function Etablissements() {
   const [selectedLevel, setSelectedLevel] = useState<'3ème' | 'Terminale' | 'Supérieur' | 'all'>('all');
   const [selectedType, setSelectedType] = useState<School['type'] | 'all'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [isSearchingAI, setIsSearchingAI] = useState(false);
 
   const schools = getAllSchools();
   
   const filtered = schools.filter(school => {
     const levelMatch = selectedLevel === 'all' || school.level === selectedLevel || (selectedLevel === 'Supérieur' && school.level === 'Terminale');
     const typeMatch = selectedType === 'all' || school.type === selectedType;
-    return levelMatch && typeMatch;
+    const nameMatch = school.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return levelMatch && typeMatch && nameMatch;
   });
+
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearchingAI(true);
+    setAiResult(null);
+    try {
+      const result = await searchAIInfo(searchQuery, 'établissement');
+      setAiResult(result);
+    } catch (e) {
+      setAiResult("Erreur lors de la recherche IA.");
+    }
+    setIsSearchingAI(false);
+  };
 
   const schoolTypes: School['type'][] = [
     'Lycée', 'Collège', 'Lycée Technique', 'Lycée Professionnel', 
@@ -102,6 +119,33 @@ export default function Etablissements() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Barre de recherche IA */}
+        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 p-6 rounded-[2rem] border-2 border-blue-100 dark:border-blue-800/50">
+          <p className="text-sm font-black text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-3">Recherche IA & Filtrage</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="text" 
+              placeholder="Ex: Prytanée Militaire, Université Zinda..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <button 
+              onClick={handleAISearch}
+              disabled={isSearchingAI || !searchQuery.trim()}
+              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {isSearchingAI ? 'Recherche IA...' : 'Chercher avec l\'IA'}
+            </button>
+          </div>
+          {aiResult && (
+            <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-blue-200 dark:border-blue-700 text-gray-700 dark:text-gray-300 text-sm">
+              <strong className="text-blue-600 dark:text-blue-400 block mb-1">Résultat de l'IA :</strong>
+              {aiResult}
+            </div>
+          )}
         </div>
       </div>
 

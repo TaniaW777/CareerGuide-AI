@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useOfflineStore } from '../store/useOfflineStore';
-import { getAllPrograms } from '../services/localCareerBackend';
+import { getAllPrograms, searchAIInfo } from '../services/localCareerBackend';
 // import type { Program } from '../services/localCareerBackend';
 import { ProfileUserIcon } from '../components/Icons';
 
@@ -8,14 +8,31 @@ export default function Filieres() {
   const { profile } = useOfflineStore();
   const [selectedLevel, setSelectedLevel] = useState<'3ème' | 'Terminale' | 'Supérieur' | 'all'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [isSearchingAI, setIsSearchingAI] = useState(false);
 
   const programs = getAllPrograms();
-  const filteredPrograms = selectedLevel === 'all' 
-    ? programs 
-    : programs.filter(p => {
-        if (selectedLevel === 'Supérieur') return p.level === 'Terminale' || p.level === 'Supérieur';
-        return p.level === selectedLevel;
-      });
+  const filteredPrograms = programs.filter(p => {
+    const levelMatch = selectedLevel === 'all' 
+      ? true 
+      : (selectedLevel === 'Supérieur' ? (p.level === 'Terminale' || p.level === 'Supérieur') : p.level === selectedLevel);
+    const nameMatch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return levelMatch && nameMatch;
+  });
+
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearchingAI(true);
+    setAiResult(null);
+    try {
+      const result = await searchAIInfo(searchQuery, 'filière');
+      setAiResult(result);
+    } catch (e) {
+      setAiResult("Erreur lors de la recherche IA.");
+    }
+    setIsSearchingAI(false);
+  };
 
   if (!profile || !profile.name) {
     return (
@@ -57,6 +74,33 @@ export default function Filieres() {
             {level === 'all' ? 'Toutes les filières' : `Niveau ${level}`}
           </button>
         ))}
+      </div>
+
+      {/* Barre de recherche IA */}
+      <div className="mb-12 bg-blue-50 dark:bg-blue-900/20 p-6 rounded-[2rem] border-2 border-blue-100 dark:border-blue-800/50">
+        <p className="text-sm font-black text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-3">Recherche IA & Filtrage</p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input 
+            type="text" 
+            placeholder="Ex: Informatique, Médecine, Droit..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          <button 
+            onClick={handleAISearch}
+            disabled={isSearchingAI || !searchQuery.trim()}
+            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            {isSearchingAI ? 'Recherche IA...' : 'Chercher avec l\'IA'}
+          </button>
+        </div>
+        {aiResult && (
+          <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-blue-200 dark:border-blue-700 text-gray-700 dark:text-gray-300 text-sm">
+            <strong className="text-blue-600 dark:text-blue-400 block mb-1">Résultat de l'IA :</strong>
+            {aiResult}
+          </div>
+        )}
       </div>
 
       {/* Grille des filières */}
