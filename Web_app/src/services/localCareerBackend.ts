@@ -335,6 +335,38 @@ function getSmartFallback(msg: string, profile: UserProfile | null): string {
 }
 
 // ===================================================================
+// GROQ API CALL HELPER
+// ===================================================================
+async function fetchGroq(messages: { role: string; content: string }[], maxTokens = 150, temperature = 0.5): Promise<string> {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error("Clé API Groq manquante.");
+  }
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'llama3-8b-8192',
+      messages: messages,
+      temperature: temperature,
+      max_tokens: maxTokens,
+      top_p: 0.9
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Erreur API Groq');
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ===================================================================
 // MAIN CHAT FUNCTION
 // ===================================================================
 export async function getChatReply(
@@ -351,62 +383,36 @@ export async function getChatReply(
 L'utilisateur s'appelle ${name} (niveau: ${level}, intérêts: ${interests}).
 
 Règles strictes :
-- Sois très chaleureux, empathique et naturel (comme un humain qui discute et donne des conseils).
-- Fournis exactement les informations demandées par l'utilisateur (ex: liste d'établissements, bourses disponibles, filières).
-- Utilise le tutoiement ("tu").
+- Sois très chaleureux, empathique et naturel.
+- Réponds CORRECTEMENT, avec VÉRACITÉ et PRÉCISION à TOUTES les questions posées, même si elles s'éloignent de l'orientation scolaire ou du profil de l'utilisateur. Ne refuse jamais de répondre et ne force pas l'utilisateur à poser des questions spécifiques.
 - Sois concis et direct (maximum 3 à 4 phrases).
-- Ne fais pas de longues listes, privilégie des réponses sous forme de paragraphes naturels.
-- N'ajoute pas de salutations répétitives si la conversation est déjà en cours.`;
+- Utilise le tutoiement ("tu").
+- Ne fais pas de longues listes, privilégie des réponses sous forme de paragraphes naturels.`;
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max pour laisser le temps à Ollama de répondre
+    const messages = [
+      { role: 'system', content: systemContext },
+      ...history.slice(-16).map(msg => ({ 
+        role: msg.sender === 'user' ? 'user' : 'assistant', 
+        content: msg.text 
+      })),
+      { role: 'user', content: message }
+    ];
 
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gemma:2b',
-        messages: [
-          { role: 'system', content: systemContext },
-          // Include only last 8 exchanges for context (max 16 entries)
-          ...history.slice(-16).map(msg => ({ 
-            role: msg.sender === 'user' ? 'user' : 'assistant', 
-            content: msg.text 
-          })),
-          { role: 'user', content: message }
-        ],
-        stream: false,
-        options: {
-          temperature: 0.5,  // Slightly higher for more natural conversation
-          top_p: 0.9,
-          num_predict: 150,  // Shorter responses for speed
-          repeat_penalty: 1.15
-        }
-      }),
-      signal: controller.signal,
-    });
+    let reply = await fetchGroq(messages, 200, 0.6);
+    reply = reply.trim();
 
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const data = await response.json();
-      let reply = data.response?.trim();
-
-      if (reply && reply.length > 8) {
-        // Clean up potential model artifacts
-        reply = reply.replace(/^(Conseiller|Assistant|AI|[*#]+)\s*:\s*/gi, '').trim();
-        reply = reply.replace(/^\n+/, '').replace(/\n+$/, '').trim();
-        
-        // If response is too short after cleanup, use fallback
-        if (reply.length > 10) {
-          return reply;
-        }
+    if (reply && reply.length > 8) {
+      // Clean up potential model artifacts
+      reply = reply.replace(/^(Conseiller|Assistant|AI|[*#]+)\s*:\s*/gi, '').trim();
+      reply = reply.replace(/^\n+/, '').replace(/\n+$/, '').trim();
+      
+      if (reply.length > 10) {
+        return reply;
       }
     }
   } catch (error) {
-    // Ollama timeout or error - use fallback silently
-    console.log('Ollama non disponible ou timeout.');
+    console.log('API Cloud non disponible, utilisation du fallback.', error);
   }
 
   // Fallback: Smart rules-based response (works offline)
@@ -446,31 +452,12 @@ export async function generateDynamicQuestions(profile: UserProfile): Promise<st
   const systemContext = `Tu es un conseiller d'orientation au Burkina Faso. Génère exactement 3 questions courtes, simples et personnalisées pour aider un élève de niveau "${education}" à trouver sa voie. Utilise ses passions (${interests}), ses compétences (${skills}) et ses objectifs (${goals}) pour formuler des questions qui permettent de choisir une série, une filière, ou un établissement. Renvoie UNIQUEMENT les 3 questions, une par ligne, sans introduction ni conclusion.`;
   
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max
-
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gemma:2b',
-        messages: [{ role: 'user', content: systemContext }],
-        stream: false,
-        options: { temperature: 0.6, num_predict: 150 }
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const data = await response.json();
-      const reply = data.message?.content?.trim() || data.response?.trim();
-      if (reply) {
-        const questions = reply.split('\n')
-          .map((q: string) => q.replace(/^[\d\-\.\*]+\s*/, '').trim())
-          .filter((q: string) => q.length > 5);
-        if (questions.length >= 2) return questions.slice(0, 3);
-      }
+    const reply = await fetchGroq([{ role: 'user', content: systemContext }], 150, 0.6);
+    if (reply) {
+      const questions = reply.split('\n')
+        .map((q: string) => q.replace(/^[\d\-\.\*]+\s*/, '').trim())
+        .filter((q: string) => q.length > 5);
+      if (questions.length >= 2) return questions.slice(0, 3);
     }
   } catch (error) {
     console.log('Erreur génération questions dynamiques:', error);
@@ -512,39 +499,15 @@ Vœux/Objectifs: ${goals}
 Fais une analyse personnalisée, claire et chaleureuse d'environ 3 phrases. Ne mentionne pas les bourses.`;
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max for analysis
+    let reply = await fetchGroq([
+      { role: 'system', content: systemContext },
+      { role: 'user', content: prompt }
+    ], 250, 0.5);
 
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gemma:2b',
-        messages: [
-          { role: 'system', content: systemContext },
-          { role: 'user', content: prompt }
-        ],
-        stream: false,
-        options: {
-          temperature: 0.5,
-          top_p: 0.9,
-          num_predict: 250
-        }
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const data = await response.json();
-      let reply = data.message?.content?.trim() || data.response?.trim();
-
-      if (reply) {
-        reply = reply.replace(/^(Conseiller|Expert|Analyse)\s*:\s*/i, '').trim();
-        reply = reply.replace(/[*#]/g, '').trim();
-        if (reply.length > 20) return reply;
-      }
+    if (reply) {
+      reply = reply.replace(/^(Conseiller|Expert|Analyse)\s*:\s*/i, '').trim();
+      reply = reply.replace(/[*#]/g, '').trim();
+      if (reply.length > 20) return reply;
     }
   } catch (error) {
     console.log('Erreur lors de la génération de l\'analyse IA:', error);
