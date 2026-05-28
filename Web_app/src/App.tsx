@@ -4,6 +4,8 @@ import { useOfflineStore } from './store/useOfflineStore';
 
 import Landing from './pages/Landing';
 import Profil from './pages/Profil';
+import Etablissements from './pages/Etablissements';
+import Filieres from './pages/Filieres';
 import Recommendations from './pages/Recommendations';
 import Chat from './pages/Chat';
 import Testimonials from './pages/Testimonials';
@@ -41,6 +43,8 @@ function App() {
           {/* Legacy route redirects to /profil or handles navigation properly if needed, but since we updated all Links, it's fine */}
           <Route path="/profile-setup" element={<Profil />} />
           <Route path="/profit" element={<Profil />} />
+          <Route path="/etablissements" element={<Etablissements />} />
+          <Route path="/filieres" element={<Filieres />} />
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/testimonials" element={<Testimonials />} />

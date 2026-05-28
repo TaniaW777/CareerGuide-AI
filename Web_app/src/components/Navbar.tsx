@@ -12,8 +12,16 @@ const navLinks = [
     label: 'Mon Profil',
   },
   {
-    to: '/recommendations',
+    to: '/etablissements',
     label: 'Établissements',
+  },
+  {
+    to: '/filieres',
+    label: 'Filières',
+  },
+  {
+    to: '/recommendations',
+    label: 'Recommandations IA',
   },
   {
     to: '/chat',
@@ -23,7 +31,7 @@ const navLinks = [
 
 export default function Navbar() {
   const location = useLocation();
-  const { isOffline, theme, toggleTheme } = useOfflineStore();
+  const { theme, toggleTheme } = useOfflineStore();
 
   return (
     <>

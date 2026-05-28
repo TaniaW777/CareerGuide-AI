@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useOfflineStore } from '../store/useOfflineStore';
 import { getAllPrograms } from '../services/localCareerBackend';
-import type { Program } from '../services/localCareerBackend';
+// import type { Program } from '../services/localCareerBackend';
 import { ProfileUserIcon } from '../components/Icons';
 
 export default function Filieres() {

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useOfflineStore } from '../store/useOfflineStore';
-import { getInterestIcon } from '../components/Icons';
 
 const interestColors: Record<string, string> = {
   'Technologie': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -20,6 +19,8 @@ export default function Profil() {
   const { profile, setProfile, clearStorage } = useOfflineStore();
   const [activeEditField, setActiveEditField] = useState<EditField>(!profile ? 'personal' : null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [customInterest, setCustomInterest] = useState('');
+  const [isCustomEducation, setIsCustomEducation] = useState(false);
 
   // Temporary edit state
   const [tempData, setTempData] = useState(
@@ -135,26 +136,54 @@ export default function Profil() {
               {activeEditField === 'education' ? (
                 <div className="animate-in fade-in zoom-in-95">
                   <h3 className="text-xl font-black mb-4 dark:text-white">Niveau Scolaire (Burkina Faso)</h3>
-                  <select 
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 mb-4 font-bold outline-none focus:border-blue-500"
-                    value={tempData.education}
-                    onChange={(e) => setTempData({...tempData, education: e.target.value})}
-                  >
-                    <option value="6ème">6ème</option>
-                    <option value="5ème">5ème</option>
-                    <option value="4ème">4ème</option>
-                    <option value="3ème">3ème</option>
-                    <option value="2nde">2nde</option>
-                    <option value="1ère">1ère</option>
-                    <option value="Terminale A">Terminale A</option>
-                    <option value="Terminale D">Terminale D</option>
-                    <option value="Terminale C">Terminale C</option>
-                    <option value="Terminale E">Terminale E</option>
-                    <option value="Terminale F">Terminale F</option>
-                    <option value="Terminale G">Terminale G</option>
-                    <option value="CAP / BEP">CAP / BEP</option>
-                    <option value="Université">Université</option>
-                  </select>
+                  {isCustomEducation ? (
+                    <div className="flex gap-2 mb-4">
+                      <input 
+                        type="text" 
+                        className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 font-bold outline-none focus:border-blue-500"
+                        placeholder="Précisez votre niveau..."
+                        value={tempData.education}
+                        onChange={(e) => setTempData({...tempData, education: e.target.value})}
+                        autoFocus
+                      />
+                      <button 
+                        onClick={() => { setIsCustomEducation(false); setTempData({...tempData, education: '3ème'}) }} 
+                        className="px-4 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                        title="Retour à la liste"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <select 
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 mb-4 font-bold outline-none focus:border-blue-500"
+                      value={tempData.education}
+                      onChange={(e) => {
+                        if (e.target.value === 'Autre') {
+                          setIsCustomEducation(true);
+                          setTempData({...tempData, education: ''});
+                        } else {
+                          setTempData({...tempData, education: e.target.value});
+                        }
+                      }}
+                    >
+                      <option value="6ème">6ème</option>
+                      <option value="5ème">5ème</option>
+                      <option value="4ème">4ème</option>
+                      <option value="3ème">3ème</option>
+                      <option value="2nde">2nde</option>
+                      <option value="1ère">1ère</option>
+                      <option value="Terminale A">Terminale A</option>
+                      <option value="Terminale D">Terminale D</option>
+                      <option value="Terminale C">Terminale C</option>
+                      <option value="Terminale E">Terminale E</option>
+                      <option value="Terminale F">Terminale F</option>
+                      <option value="Terminale G">Terminale G</option>
+                      <option value="CAP / BEP">CAP / BEP</option>
+                      <option value="Université">Université</option>
+                      <option value="Autre">Autre (Préciser)</option>
+                    </select>
+                  )}
                   <div className="flex gap-2">
                     <button onClick={saveChanges} className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">Sauvegarder</button>
                     <button onClick={cancelChanges} className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-bold">Annuler</button>
@@ -181,7 +210,7 @@ export default function Profil() {
               {activeEditField === 'interests' ? (
                 <div className="animate-in fade-in zoom-in-95">
                   <h3 className="text-xl font-black mb-4 dark:text-white">Centres d'intérêt</h3>
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {['Technologie', 'Art & Design', 'Science', 'Business', 'Santé', 'Social', 'Écologie', 'Sport', 'Médias'].map(i => (
                       <button 
                         key={i} 
@@ -194,6 +223,48 @@ export default function Profil() {
                         {i}
                       </button>
                     ))}
+                    {tempData.interests.filter(i => !['Technologie', 'Art & Design', 'Science', 'Business', 'Santé', 'Social', 'Écologie', 'Sport', 'Médias'].includes(i)).map(i => (
+                       <button 
+                       key={i} 
+                       onClick={() => {
+                         const newI = tempData.interests.filter(x => x !== i);
+                         setTempData({...tempData, interests: newI});
+                       }}
+                       className="px-3 py-1.5 rounded-lg text-sm font-bold border-2 border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 transition-all flex items-center gap-2"
+                     >
+                       {i} <span>✕</span>
+                     </button>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-2 mb-6">
+                    <input 
+                      type="text" 
+                      className="flex-1 px-4 py-2 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-900 font-bold outline-none focus:border-blue-500"
+                      placeholder="Autre passion (ex: Musique)..."
+                      value={customInterest}
+                      onChange={(e) => setCustomInterest(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && customInterest.trim()) {
+                          e.preventDefault();
+                          if (!tempData.interests.includes(customInterest.trim())) {
+                            setTempData({...tempData, interests: [...tempData.interests, customInterest.trim()]});
+                          }
+                          setCustomInterest('');
+                        }
+                      }}
+                    />
+                    <button 
+                      onClick={() => {
+                        if (customInterest.trim() && !tempData.interests.includes(customInterest.trim())) {
+                          setTempData({...tempData, interests: [...tempData.interests, customInterest.trim()]});
+                        }
+                        setCustomInterest('');
+                      }}
+                      className="px-4 py-2 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded-xl hover:bg-blue-200 transition-colors"
+                    >
+                      Ajouter
+                    </button>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={saveChanges} className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">Sauvegarder</button>

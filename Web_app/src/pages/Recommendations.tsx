@@ -125,7 +125,7 @@ export default function Recommendations() {
     return (
       <div className="space-y-8">
         {questions.map((q, idx) => (
-          <div key={idx} className="animate-in fade-in slide-in-from-right-4" style={{ animationDelay: \`\${idx * 150}ms\` }}>
+          <div key={idx} className="animate-in fade-in slide-in-from-right-4" style={{ animationDelay: `${idx * 150}ms` }}>
             <label className="block font-bold text-gray-800 dark:text-gray-200 mb-3 text-lg">
               {idx + 1}. {q}
             </label>
@@ -313,8 +313,8 @@ export default function Recommendations() {
                       
                       // Load scholarships, programs, and schools
                       setScholarships(getScholarships() || []);
-                      setMatchingPrograms(getAllPrograms(finalLevel).slice(0, 3));
-                      setMatchingSchools(getAllSchools(finalLevel).slice(0, 5));
+                      setMatchingPrograms(getAllPrograms(finalLevel as any).slice(0, 3));
+                      setMatchingSchools(getAllSchools(finalLevel as any).slice(0, 5));
                       
                       setStep('results');
                     } catch (err) {

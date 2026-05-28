@@ -41,9 +41,10 @@ export interface Recommendation {
   score: number;
   schools: { name: string; city: string }[];
   type: 'Serie' | 'CAP/BEP' | 'Universite' | 'Institut';
+  tags?: string[];
 }
 
-const BACKEND_URL = 'http://127.0.0.1:8000';
+// const BACKEND_URL = 'http://127.0.0.1:8000';
 
 function normalizeEducation(education: string) {
   if (!education) return '3ème';
@@ -412,9 +413,10 @@ Règles strictes :
 }
 
 // Cache for Wikipedia summaries
-const wikiCache = new Map<string, string>();
+// const wikiCache = new Map<string, string>();
 
-// Helper to fetch Wikipedia summary
+// Helper to fetch Wikipedia summary (Unused, commented out)
+/*
 async function fetchWikiSummary(query: string): Promise<string> {
   const key = query.toLowerCase().trim();
   if (wikiCache.has(key)) return wikiCache.get(key) as string;
@@ -429,6 +431,7 @@ async function fetchWikiSummary(query: string): Promise<string> {
     return '';
   }
 }
+*/
 
 // ===================================================================
 // AI RECOMMENDATION ANALYSIS & DYNAMIC QUESTIONS
