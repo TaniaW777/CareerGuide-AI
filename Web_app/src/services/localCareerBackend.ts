@@ -307,15 +307,15 @@ function getSmartFallback(msg: string, profile: UserProfile | null): string {
     return `Au Burkina Faso, apres la 3eme, tu peux choisir parmi les series suivantes au lycee : Serie A (Lettres), Serie C (Maths/Physique), Serie D (Biologie/SVT), Serie E (Maths/Technique), Serie F (Technologie), Serie G (Gestion/Commerce). Tu peux aussi opter pour un CAP ou BEP si tu preferes une formation professionnelle courte. Quelle matiere aimes-tu le plus ?`;
   }
   // Bourses
-  if (/\b(bourse|ciospb|foner|auf|aide financ|financement)\b/.test(lower)) {
+  if (/\b(bourses?|ciospb|foner|auf|aides? financ|financement)\b/.test(lower)) {
     return `Au Burkina Faso, voici les principales bourses disponibles :\n- CIOSPB : Bourses gouvernementales nationales et internationales pour les bacheliers meritants.\n- FONER : Fonds National pour l'Education et la Recherche, offre des prets et aides financieres aux etudiants.\n- AUF : Bourses de mobilite dans l'espace francophone.\nCes bourses sont des aides financieres, pas des formations. Tu peux visiter ciospb.gov.bf pour postuler.`;
   }
   // CAP/BEP
-  if (/\b(cap|bep|formation pro|professionnel)\b/.test(lower)) {
+  if (/\b(cap|bep|formations? pro|professionnel)\b/.test(lower)) {
     return `Les CAP et BEP sont des formations professionnelles courtes accessibles apres la 3eme au Burkina Faso. Tu peux te former en Comptabilite, Mecanique Auto, Menuiserie, Dessin Batiment, Informatique et bien d'autres. C'est un excellent choix si tu veux apprendre un metier concret et entrer rapidement dans la vie active.`;
   }
   // University
-  if (/\b(universit|fac|etude sup|apres le bac|licence|master)\b/.test(lower)) {
+  if (/\b(universit|facs?|etudes? sup|apres le bac|licences?|masters?)\b/.test(lower)) {
     return `Apres le BAC au Burkina Faso, tu peux t'inscrire dans plusieurs universites publiques : Universite Joseph Ki-Zerbo (Ouagadougou), Universite Nazi Boni (Bobo-Dioulasso), Universite Thomas Sankara (Ouagadougou), ou au Burkina Institute of Technology (Koudougou). Les filieres vont de la Medecine a l'Informatique en passant par le Droit et l'Agronomie.`;
   }
   // BEPC
@@ -326,6 +326,7 @@ function getSmartFallback(msg: string, profile: UserProfile | null): string {
   if (/\b(aide|help|comment|quoi faire|que faire|conseil)\b/.test(lower)) {
     return `Je peux t'aider avec plusieurs choses, ${name} :\n- Choisir ta serie au lycee (A, C, D, E, F, G)\n- Decouvrir les universites du Burkina Faso\n- Explorer les formations professionnelles (CAP/BEP)\n- Trouver des bourses d'etudes (CIOSPB, FONER, AUF)\n- Comprendre le systeme educatif burkinabe\nPose-moi ta question !`;
   }
+  
   // Default with personalization
   if (interests) {
     return `Bonne question ! En tant qu'eleve de ${level} avec un interet pour ${interests}, je te recommande d'explorer les filieres correspondantes. Veux-tu que je t'explique les series du BAC, les universites ou les formations professionnelles au Burkina Faso ?`;
@@ -359,7 +360,7 @@ Règles strictes :
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s max pour éviter trop d'attente
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max pour laisser le temps à Ollama de répondre
 
     const response = await fetch('http://127.0.0.1:11434/api/chat', {
       method: 'POST',
@@ -441,7 +442,7 @@ export async function generateDynamicQuestions(level: string): Promise<string[]>
   
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s max
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max
 
     const response = await fetch('http://127.0.0.1:11434/api/chat', {
       method: 'POST',
@@ -508,7 +509,7 @@ Fais une analyse personnalisée d'environ 3 phrases.`;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s max for analysis
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max for analysis
 
     const response = await fetch('http://127.0.0.1:11434/api/chat', {
       method: 'POST',

@@ -120,7 +120,7 @@ export default function Recommendations() {
       onSubmit(combined);
     };
 
-    const canSubmit = answers.every(a => a.trim().length > 2);
+    const canSubmit = answers.every(a => a.trim().length > 0);
 
     return (
       <div className="space-y-8">
@@ -304,16 +304,28 @@ export default function Recommendations() {
                     setError('');
 
                     try {
+                      const startTime = Date.now();
                       const [aiAnalysis, recs] = await Promise.all([
                         generateAIRecommendationAnalysis(profile!, finalLevel, combinedAnswers),
                         Promise.resolve(getDynamicRecommendations(profile!, combinedAnswers, finalLevel))
                       ]);
+                      
+                      // Ensure the progress animation plays for at least 2.5 seconds for better UX
+                      const elapsed = Date.now() - startTime;
+                      if (elapsed < 2500) {
+                        await new Promise(r => setTimeout(r, 2500 - elapsed));
+                      }
+
                       setAnalysis(aiAnalysis || '');
                       setRecommendations(recs);
                       
                       // Load scholarships, programs, and schools
                       setScholarships(getScholarships() || []);
-                      setMatchingPrograms(getAllPrograms(finalLevel as any).slice(0, 3));
+                      
+                      // Properly use the AI-ranked recommendations instead of just the top level ones!
+                      const rankedPrograms = recs.length > 0 ? recs : getAllPrograms(finalLevel as any).slice(0, 3);
+                      setMatchingPrograms(rankedPrograms as any);
+                      
                       setMatchingSchools(getAllSchools(finalLevel as any).slice(0, 5));
                       
                       setStep('results');
@@ -338,9 +350,19 @@ export default function Recommendations() {
         <div className="animate-in fade-in zoom-in-95 duration-500 space-y-16">
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">Partie 2 : Vos Recommandations</h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
               Voici vos recommandations personnalisées pour votre parcours d'études.
             </p>
+            {analysis && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl max-w-3xl mx-auto border border-blue-100 dark:border-blue-800 text-left">
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl">🤖</div>
+                  <p className="text-gray-800 dark:text-gray-200 text-lg font-medium italic leading-relaxed">
+                    "{analysis}"
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Section 1: Filières Recommandées */}

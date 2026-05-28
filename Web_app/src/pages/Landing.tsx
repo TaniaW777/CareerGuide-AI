@@ -216,6 +216,80 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* TESTIMONIALS (Image 1) */}
+      <section className="py-24 bg-white dark:bg-gray-950">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">
+              Ils ont trouvé leur voie
+            </h2>
+            <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-medium">
+              Découvrez comment CareerGuide a aidé des milliers d'étudiants et professionnels à s'orienter.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Testimonial 1 */}
+            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border-2 border-gray-100 dark:border-gray-800 shadow-xl hover:-translate-y-1 transition-transform">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold text-xl">
+                  SM
+                </div>
+                <div>
+                  <h4 className="font-black text-gray-900 dark:text-white">Sarah M.</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Étudiante en Terminale</p>
+                </div>
+              </div>
+              <div className="flex gap-1 text-amber-400 mb-6">
+                {"★★★★★".split("").map((star, i) => <span key={i} className="text-xl">{star}</span>)}
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium italic leading-relaxed">
+                "CareerGuide m'a aidée à découvrir le métier de Data Scientist, auquel je n'avais jamais pensé. L'IA a vraiment compris mes intérêts pour les maths et l'art."
+              </p>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border-2 border-gray-100 dark:border-gray-800 shadow-xl hover:-translate-y-1 transition-transform">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xl">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </div>
+                <div>
+                  <h4 className="font-black text-gray-900 dark:text-white">Marc L.</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">En reconversion</p>
+                </div>
+              </div>
+              <div className="flex gap-1 text-amber-400 mb-6">
+                {"★★★★★".split("").map((star, i) => <span key={i} className="text-xl">{star}</span>)}
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium italic leading-relaxed">
+                "Le mode hors-ligne est un vrai plus ! J'ai pu explorer les recommandations pendant mes trajets. L'interface est intuitive et très fluide."
+              </p>
+            </div>
+
+            {/* Testimonial 3 */}
+            <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border-2 border-gray-100 dark:border-gray-800 shadow-xl hover:-translate-y-1 transition-transform">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xl">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </div>
+                <div>
+                  <h4 className="font-black text-gray-900 dark:text-white">Julie D.</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Étudiante L3</p>
+                </div>
+              </div>
+              <div className="flex gap-1 text-amber-400 mb-6">
+                {"★★★★".split("").map((star, i) => <span key={i} className="text-xl">{star}</span>)}
+                <span className="text-xl text-gray-300 dark:text-gray-700">★</span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium italic leading-relaxed">
+                "L'assistant IA est bluffant. On a l'impression de discuter avec un vrai conseiller qui prend le temps de comprendre nos besoins."
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl bg-blue-800 rounded-[3rem] p-12 md:p-20 relative overflow-hidden text-center shadow-3xl">
