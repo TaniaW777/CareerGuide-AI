@@ -307,7 +307,7 @@ function getSmartFallback(msg: string, profile: UserProfile | null): string {
     return `Au Burkina Faso, apres la 3eme, tu peux choisir parmi les series suivantes au lycee : Serie A (Lettres), Serie C (Maths/Physique), Serie D (Biologie/SVT), Serie E (Maths/Technique), Serie F (Technologie), Serie G (Gestion/Commerce). Tu peux aussi opter pour un CAP ou BEP si tu preferes une formation professionnelle courte. Quelle matiere aimes-tu le plus ?`;
   }
   // Bourses
-  if (/\b(bourses?|ciospb|foner|auf|aides? financ|financement)\b/.test(lower)) {
+  if (/(bourse|ciospb|foner|auf|aide.*financ|financement)/.test(lower)) {
     return `Au Burkina Faso, voici les principales bourses disponibles :\n- CIOSPB : Bourses gouvernementales nationales et internationales pour les bacheliers meritants.\n- FONER : Fonds National pour l'Education et la Recherche, offre des prets et aides financieres aux etudiants.\n- AUF : Bourses de mobilite dans l'espace francophone.\nCes bourses sont des aides financieres, pas des formations. Tu peux visiter ciospb.gov.bf pour postuler.`;
   }
   // CAP/BEP
@@ -329,9 +329,9 @@ function getSmartFallback(msg: string, profile: UserProfile | null): string {
   
   // Default with personalization
   if (interests) {
-    return `Bonne question ! En tant qu'eleve de ${level} avec un interet pour ${interests}, je te recommande d'explorer les filieres correspondantes. Veux-tu que je t'explique les series du BAC, les universites ou les formations professionnelles au Burkina Faso ?`;
+    return `Bonne question ! En tant qu'eleve de ${level} avec un interet pour ${interests}, je te recommande d'explorer les filieres correspondantes. N'hesite pas a me poser n'importe quelle question sur tes etudes ou ton avenir pro !`;
   }
-  return `Je suis la pour t'aider dans ton orientation scolaire au Burkina Faso, ${name}. Tu peux me poser des questions sur les series du BAC (A, C, D, E, F, G), les universites, les bourses (CIOSPB, FONER) ou les formations professionnelles. Que souhaites-tu savoir ?`;
+  return `Je suis la pour t'aider dans ton orientation scolaire au Burkina Faso, ${name}. N'hesite pas a me poser n'importe quelle question sur ton avenir, tes etudes, ou les metiers qui t'interessent !`;
 }
 
 // ===================================================================
@@ -362,7 +362,7 @@ Règles strictes :
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max pour laisser le temps à Ollama de répondre
 
-    const response = await fetch('http://127.0.0.1:11434/api/chat', {
+    const response = await fetch('http://localhost:11434/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -449,7 +449,7 @@ export async function generateDynamicQuestions(profile: UserProfile): Promise<st
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max
 
-    const response = await fetch('http://127.0.0.1:11434/api/chat', {
+    const response = await fetch('http://localhost:11434/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -515,7 +515,7 @@ Fais une analyse personnalisée, claire et chaleureuse d'environ 3 phrases. Ne m
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s max for analysis
 
-    const response = await fetch('http://127.0.0.1:11434/api/chat', {
+    const response = await fetch('http://localhost:11434/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
