@@ -9,6 +9,8 @@ interface UserProfile {
   interests: string[];
   skills: string;
   goals: string;
+  questionnaireAnswers?: Record<string, string | string[]>;
+  bacSeries?: string;
 }
 
 export interface ChatMessage {
@@ -23,13 +25,23 @@ interface OfflineState {
   setProfile: (profile: UserProfile) => void;
   isOffline: boolean;
   setOfflineStatus: (status: boolean) => void;
+  forcedOffline: boolean;
+  setForcedOffline: (status: boolean) => void;
+  isOnline: boolean;
+  setOnlineStatus: (status: boolean) => void;
   lastSync: string | null;
   setLastSync: (date: string) => void;
+  schoolLevel: string;
+  setSchoolLevel: (level: string) => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
   aiEngineStatus: 'ollama' | 'groq' | 'offline' | 'checking';
   setAIEngineStatus: (status: 'ollama' | 'groq' | 'offline' | 'checking') => void;
+  embeddedAIEnabled: boolean;
+  setEmbeddedAIEnabled: (status: boolean) => void;
+  embeddedAIStatus: 'loading' | 'ready' | 'error' | 'checking';
+  setEmbeddedAIStatus: (status: 'loading' | 'ready' | 'error' | 'checking') => void;
   // Persist latest AI analysis and recommendations
   savedAnalysis: string | null;
   savedRecommendations: Recommendation[] | null;
@@ -57,13 +69,23 @@ export const useOfflineStore = create<OfflineState>()(
       setProfile: (profile) => set({ profile }),
       isOffline: !navigator.onLine,
       setOfflineStatus: (status) => set({ isOffline: status }),
+      forcedOffline: true,
+      setForcedOffline: (status) => set({ forcedOffline: status }),
+      isOnline: false,
+      setOnlineStatus: (status) => set({ isOnline: status }),
       lastSync: null,
       setLastSync: (lastSync) => set({ lastSync }),
+      schoolLevel: '',
+      setSchoolLevel: (level) => set({ schoolLevel: level }),
       theme: 'light',
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setTheme: (theme) => set({ theme }),
       aiEngineStatus: 'checking',
       setAIEngineStatus: (status) => set({ aiEngineStatus: status }),
+      embeddedAIEnabled: true,
+      setEmbeddedAIEnabled: (status) => set({ embeddedAIEnabled: status }),
+      embeddedAIStatus: 'checking',
+      setEmbeddedAIStatus: (status) => set({ embeddedAIStatus: status }),
       // Persist latest AI analysis and recommendations
       savedAnalysis: null,
       savedRecommendations: null,
@@ -80,8 +102,8 @@ export const useOfflineStore = create<OfflineState>()(
       })),
       clearChatHistory: () => set({ chatHistory: [DEFAULT_AI_MESSAGE] }),
       clearStorage: () => {
-        localStorage.removeItem('careerguide-storage');
-        set({ profile: null, lastSync: null, theme: 'light', isOffline: !navigator.onLine, chatHistory: [DEFAULT_AI_MESSAGE], analysisHistory: [], aiEngineStatus: 'checking' });
+          localStorage.removeItem('careerguide-storage');
+          set({ profile: null, lastSync: null, theme: 'light', isOffline: !navigator.onLine, forcedOffline: false, embeddedAIEnabled: true, embeddedAIStatus: 'checking', schoolLevel: '', chatHistory: [DEFAULT_AI_MESSAGE], analysisHistory: [], aiEngineStatus: 'checking' });
       },
     }),
     {

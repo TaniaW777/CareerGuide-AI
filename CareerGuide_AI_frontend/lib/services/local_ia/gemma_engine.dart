@@ -1,39 +1,66 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import '../../core/config/backend_config.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
+import 'package:flutter_gemma/core/model_response.dart';
 
-/// Wrapper that calls the CareerGuide backend (which runs Gemma or
-/// falls back to rule-based) via HTTP.
-///
-/// When the user is "online" the backend at [BackendConfig.baseUrl] is
-/// contacted.  If the request fails the caller will fall back to the
-/// rule-based `EnhancedChatService`.
+/// GemmaEngine loads the Gemma model using flutter_gemma and provides a simple generate method.
 class GemmaEngine {
-  /// Generate a reply via the backend. Returns `null` on any error.
-  static Future<String?> generate(String userMessage, Map<String, dynamic> profile) async {
+  static bool _initialized = false;
+  static late final InferenceModel _model;
+
+  /// Initialise the model. Must be called once (e.g., from main before AI init).
+  static Future<void> initialize() async {
+    if (_initialized) return;
     try {
-      final body = json.encode({
-        'message': userMessage,
-        'profile': profile,
-      });
-
-      final response = await http
-          .post(
-            BackendConfig.chatUri(),
-            headers: {'Content-Type': 'application/json'},
-            body: body,
-          )
-          .timeout(const Duration(seconds: 15));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return data['reply']?.toString().trim();
+      // Initialise the flutter_gemma plugin (required on some platforms).
+      await FlutterGemma.initialize();
+      // Verify that the model asset exists before attempting installation.
+      bool assetExists = false;
+      try {
+        await rootBundle.load('assets/models/gemma/gemma-2b-it.gguf');
+        assetExists = true;
+      } catch (e) {
+        debugPrint('⚠️ Gemma model asset not found: $e');
+        assetExists = false;
       }
+      if (assetExists) {
+        await FlutterGemma.installModel(modelType: ModelType.gemmaIt)
+            .fromAsset('assets/models/gemma/gemma-2b-it.gguf')
+            .install();
+      } else {
+        debugPrint('⚠️ Skipping Gemma model installation because asset is missing.');
+      }
+      // Load the active model after installation.
+      _model = await FlutterGemma.getActiveModel(maxTokens: 512);
+      _initialized = true;
+      debugPrint('✅ Gemma model installed and loaded');
     } catch (e) {
-      debugPrint("GemmaEngine error: $e");
-      // Silently ignore – caller will use fallback.
+      // If the asset is missing or installation fails, keep _initialized false.
+      debugPrint('⚠️ GemmaEngine initialization failed (model may be missing): $e');
     }
-    return null;
+  }
+
+  /// Generate a response given a prompt and user profile.
+  /// Returns `null` if the model is not loaded or an error occurs.
+  static Future<String?> generate(String prompt, Map<String, dynamic> profile) async {
+    if (!_initialized) return null;
+    try {
+      final contextJson = jsonEncode(profile);
+      final fullPrompt = "User profile: $contextJson\n\nPrompt: $prompt";
+      // Create a chat session for this inference.
+      final chat = await _model.createChat();
+      // Add the user's prompt to the chat.
+      await chat.addQueryChunk(Message.text(text: fullPrompt, isUser: true));
+      // Generate the response.
+       final response = await chat.generateChatResponse();
+       if (response is TextResponse) {
+         return response.token.trim();
+       }
+       return null;
+    } catch (e) {
+      debugPrint('⚠️ GemmaEngine generation error: $e');
+      return null;
+    }
   }
 }

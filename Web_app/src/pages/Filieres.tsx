@@ -6,7 +6,9 @@ import { ProfileUserIcon } from '../components/Icons';
 
 export default function Filieres() {
   const { profile } = useOfflineStore();
-  const [selectedLevel, setSelectedLevel] = useState<'3ème' | 'Terminale' | 'Supérieur' | 'all'>('all');
+  const initialLevel = profile?.education === '3ème' ? '3ème' :
+                     (profile?.education === 'Université' || profile?.education === 'Supérieur' ? 'Supérieur' : (profile?.education ? 'Terminale' : 'all'));
+  const [selectedLevel, setSelectedLevel] = useState<'3ème' | 'Terminale' | 'Supérieur' | 'all'>(initialLevel);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [aiResult, setAiResult] = useState<string | null>(null);
@@ -184,6 +186,19 @@ export default function Filieres() {
                       ))}
                     </ul>
                   </div>
+
+                  {program.universites && program.universites.length > 0 && (
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Où se former ?</p>
+                      <div className="flex flex-wrap gap-2">
+                        {program.universites.map(uni => (
+                          <span key={uni} className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 rounded-lg">
+                            {uni}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

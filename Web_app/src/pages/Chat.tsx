@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useOfflineStore } from '../store/useOfflineStore';
 import { getChatReply } from '../services/localCareerBackend';
 import aiAvatar from '../assets/ai_avatar.png';
@@ -8,24 +9,32 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Auto scroll to the bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isLoading]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) {
+      // Small timeout to allow UI to render first
+      setTimeout(() => {
+        handleAutoSend(q);
+      }, 500);
+      searchParams.delete("q");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
-    const userText = input.trim();
+  const handleAutoSend = async (userText: string) => {
+    if (isLoading) return;
     const userMsg = { id: Date.now(), text: userText, sender: 'user' as const, timestamp: Date.now() };
     addChatMessage(userMsg);
-    setInput('');
     setIsLoading(true);
 
     try {
-      // Pass the full history so the AI has context
       const reply = await getChatReply(userText, profile, chatHistory);
       const aiMsg = {
         id: Date.now() + 1,
@@ -46,6 +55,17 @@ export default function Chat() {
       setIsLoading(false);
     }
   };
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userText = input.trim();
+    setInput('');
+    await handleAutoSend(userText);
+  };
+
+
 
   const formatTime = (ts: number) => {
     const d = new Date(ts);
@@ -137,7 +157,9 @@ export default function Chat() {
             </p>
           )}
           <div className="flex gap-3">
+            <label htmlFor="chat-input" className="sr-only">Posez votre question sur votre orientation</label>
             <input
+              id="chat-input"
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}

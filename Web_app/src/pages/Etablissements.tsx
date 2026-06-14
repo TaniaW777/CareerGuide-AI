@@ -7,7 +7,9 @@ import { ProfileUserIcon } from '../components/Icons';
 
 export default function Etablissements() {
   const { profile } = useOfflineStore();
-  const [selectedLevel, setSelectedLevel] = useState<'3ème' | 'Terminale' | 'Supérieur' | 'all'>('all');
+  const initialLevel = profile?.education === '3ème' ? '3ème' :
+                     (profile?.education === 'Université' || profile?.education === 'Supérieur' ? 'Supérieur' : (profile?.education ? 'Terminale' : 'all'));
+  const [selectedLevel, setSelectedLevel] = useState<'3ème' | 'Terminale' | 'Supérieur' | 'all'>(initialLevel);
   const [selectedType, setSelectedType] = useState<School['type'] | 'all'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,10 +38,17 @@ export default function Etablissements() {
     setIsSearchingAI(false);
   };
 
-  const schoolTypes: School['type'][] = [
-    'Lycée', 'Collège', 'Lycée Technique', 'Lycée Professionnel', 
-    'Université', 'Institut', 'Centre de Formation'
-  ];
+  let schoolTypes: School['type'][] = [];
+  if (selectedLevel === '3ème') {
+    schoolTypes = ['Lycée', 'Collège', 'Lycée Technique', 'Lycée Professionnel', 'Centre de Formation'];
+  } else if (selectedLevel === 'Terminale' || selectedLevel === 'Supérieur') {
+    schoolTypes = ['Université', 'Institut', 'Centre de Formation', 'Lycée Technique', 'Lycée Professionnel'];
+  } else {
+    schoolTypes = [
+      'Lycée', 'Collège', 'Lycée Technique', 'Lycée Professionnel', 
+      'Université', 'Institut', 'Centre de Formation'
+    ];
+  }
 
   if (!profile || !profile.name) {
     return (
@@ -224,13 +233,23 @@ export default function Etablissements() {
                         </div>
                       )}
                       {school.website && (
-                        <div className="md:col-span-2">
+                        <div>
                           <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Site web</p>
                           <a href={school.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 font-medium hover:underline break-all">
                             Visiter le site →
                           </a>
                         </div>
                       )}
+                      <div className="md:col-span-2 mt-2">
+                        <a 
+                          href={school.maps || `https://maps.google.com/?q=${encodeURIComponent(school.name + ' ' + school.city)}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-900/40 dark:hover:bg-green-900/60 dark:text-green-300 font-bold rounded-xl transition-all"
+                        >
+                          <span>📍</span> Voir sur Google Maps
+                        </a>
+                      </div>
                     </div>
 
                     {school.programs && school.programs.length > 0 && (

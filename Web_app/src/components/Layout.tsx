@@ -10,7 +10,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="hidden md:block bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            © 2026 CareerGuide IA. Tous droits réservés. Fonctionne hors-ligne.
+            © 2026 CareerGuide IA. Tous droits réservés. Fonctionne hors-ligne. 
+            <br />
+            <a href="/privacy" className="text-blue-500 hover:underline mt-2 inline-block">Politique de Confidentialité</a>
           </p>
         </div>
       </footer>

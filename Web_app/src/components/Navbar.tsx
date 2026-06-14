@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useOfflineStore } from '../store/useOfflineStore';
+import { useAppMode } from '../store/useAppMode';
 import AppLogo from './Logo';
 
 const navLinks = [
@@ -32,6 +33,7 @@ const navLinks = [
 export default function Navbar() {
   const location = useLocation();
   const { theme, toggleTheme } = useOfflineStore();
+  const { isOnline, toggleMode } = useAppMode();
 
   return (
     <>
@@ -79,6 +81,14 @@ export default function Navbar() {
               </Link>
               <button
                 type="button"
+                onClick={toggleMode}
+                title={isOnline ? 'Passer en mode hors-ligne' : 'Passer en mode en ligne'}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${isOnline ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}`}
+              >
+                {isOnline ? '🟢 En Ligne' : '⚪ Hors Ligne'}
+              </button>
+              <button
+                type="button"
                 onClick={toggleTheme}
                 title={theme === 'dark' ? 'Passer au Mode Jour' : 'Passer au Mode Nuit'}
                 className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -108,11 +118,19 @@ export default function Navbar() {
             CareerGuide
           </span>
         </Link>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800"
-        >
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleMode}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold ${isOnline ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}`}
+          >
+            {isOnline ? '🟢 En Ligne' : '⚪ Hors Ligne'}
+          </button>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800"
+          >
           {theme === 'dark' ? (
             <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -123,6 +141,7 @@ export default function Navbar() {
             </svg>
           )}
         </button>
+        </div>
       </div>
 
       {/* ===== Mobile Bottom Navigation Bar ===== */}

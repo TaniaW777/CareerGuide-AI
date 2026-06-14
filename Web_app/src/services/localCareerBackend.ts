@@ -1,3 +1,5 @@
+import { BURKINA_SCHOOLS, BURKINA_PROGRAMS } from '../data/burkina_data';
+
 export interface UserProfile {
   name: string;
   age?: string;
@@ -5,6 +7,8 @@ export interface UserProfile {
   interests: string[];
   skills: string;
   goals: string;
+  questionnaireAnswers?: Record<string, string | string[]>;
+  bacSeries?: string;
 }
 
 export interface School {
@@ -17,6 +21,7 @@ export interface School {
   website?: string;
   description?: string;
   programs?: string[];
+  maps?: string;
 }
 
 export interface Program {
@@ -27,6 +32,7 @@ export interface Program {
   debouches: string[];
   competences: string[];
   description?: string;
+  universites?: string[];
 }
 
 export interface Scholarship {
@@ -42,6 +48,7 @@ export interface Recommendation {
   schools: { name: string; city: string }[];
   type: 'Serie' | 'CAP/BEP' | 'Universite' | 'Institut';
   tags?: string[];
+  programDetails?: Program;
 }
 
 // const BACKEND_URL = 'http://127.0.0.1:8000';
@@ -55,25 +62,21 @@ function normalizeEducation(education: string) {
 }
 
 // Données adaptées au Burkina Faso
-const collegePrograms: Recommendation[] = [
-  { program: 'Série C (Maths/Physique)', type: 'Serie', tags: ['science', 'technologie', 'math'], schools: [{ name: 'Lycée Philippe Zinda Kaboré', city: 'Ouagadougou' }, { name: 'Prytanée Militaire du Kadiogo', city: 'Kadiogo' }], score: 0 },
-  { program: 'Série D (SVT)', type: 'Serie', tags: ['science', 'santé', 'écologie', 'biologie'], schools: [{ name: 'Lycée Bogodogo', city: 'Ouagadougou' }, { name: 'Lycée Ouezzin Coulibaly', city: 'Bobo-Dioulasso' }], score: 0 },
-  { program: 'Série A (Lettres/Langues)', type: 'Serie', tags: ['art & design', 'social', 'médias', 'lettres'], schools: [{ name: 'Lycée Nelson Mandela', city: 'Ouagadougou' }, { name: 'Lycée Provincial', city: 'Koudougou' }], score: 0 },
-  { program: 'Série G (Gestion/Commerce)', type: 'Serie', tags: ['business', 'gestion'], schools: [{ name: 'Lycée Technique de Ouagadougou', city: 'Ouagadougou' }], score: 0 },
-  { program: 'CAP / BEP Dessin Bâtiment', type: 'CAP/BEP', tags: ['art & design', 'technologie', 'bâtiment'], schools: [{ name: 'Lycée Professionnel Régional', city: 'Bobo-Dioulasso' }, { name: 'Centre de Formation Professionnelle', city: 'Ouagadougou' }], score: 0 },
-  { program: 'CAP / BEP Comptabilité', type: 'CAP/BEP', tags: ['business', 'gestion'], schools: [{ name: 'Lycée Professionnel National', city: 'Ouagadougou' }], score: 0 },
-  { program: 'CAP / BEP Mécanique Auto', type: 'CAP/BEP', tags: ['technologie', 'mécanique'], schools: [{ name: 'Centre de Formation Professionnelle', city: 'Koudougou' }], score: 0 },
-  { program: 'CAP / BEP Menuiserie', type: 'CAP/BEP', tags: ['art & design', 'bois'], schools: [{ name: 'Lycée Professionnel', city: 'Fada N\'Gourma' }], score: 0 },
-];
+const collegePrograms: Recommendation[] = BURKINA_PROGRAMS.filter(p => p.level === '3ème').map(p => ({
+  program: p.name,
+  type: p.type as any,
+  tags: p.competences.map(c => c.toLowerCase()),
+  schools: p.universites ? p.universites.map(u => ({ name: u, city: '' })) : [],
+  score: 0
+}));
 
-const lyceePrograms: Recommendation[] = [
-  { program: 'Licence en Informatique / Génie Logiciel', type: 'Universite', tags: ['technologie', 'informatique', 'code'], schools: [{ name: 'Burkina Institute of Technology (BIT)', city: 'Koudougou' }, { name: 'Université Joseph Ki-Zerbo', city: 'Ouagadougou' }], score: 0 },
-  { program: 'Médecine & Sciences de la Santé', type: 'Universite', tags: ['santé', 'science', 'médical'], schools: [{ name: 'Université Joseph Ki-Zerbo', city: 'Ouagadougou' }, { name: 'Université Nazi Boni', city: 'Bobo-Dioulasso' }], score: 0 },
-  { program: 'Licence en Économie et Gestion', type: 'Universite', tags: ['business', 'économie', 'gestion'], schools: [{ name: 'Université Thomas Sankara', city: 'Ouagadougou' }], score: 0 },
-  { program: 'Génie Civil & Bâtiment', type: 'Institut', tags: ['technologie', 'bâtiment'], schools: [{ name: 'Institut Supérieur d\'Ingénierie', city: 'Ouagadougou' }, { name: 'École Supérieure Polytechnique', city: 'Dédougou' }], score: 0 },
-  { program: 'Licence en Communication et Journalisme', type: 'Universite', tags: ['médias', 'art & design', 'communication'], schools: [{ name: 'Université Joseph Ki-Zerbo', city: 'Ouagadougou' }, { name: 'ISTIC', city: 'Ouagadougou' }], score: 0 },
-  { program: 'Sciences Agronomiques', type: 'Universite', tags: ['écologie', 'science', 'nature'], schools: [{ name: 'Université Nazi Boni', city: 'Bobo-Dioulasso' }, { name: 'Institut du Développement Rural', city: 'Bobo-Dioulasso' }], score: 0 },
-];
+const lyceePrograms: Recommendation[] = BURKINA_PROGRAMS.filter(p => p.level === 'Terminale' || p.level === 'Supérieur').map(p => ({
+  program: p.name,
+  type: p.type as any,
+  tags: p.competences.map(c => c.toLowerCase()).concat([p.category.toLowerCase()]),
+  schools: p.universites ? p.universites.map(u => ({ name: u, city: '' })) : [],
+  score: 0
+}));
 
 const scholarships: Scholarship[] = [
   {
@@ -96,162 +99,41 @@ const scholarships: Scholarship[] = [
   }
 ];
 
-// Catalogue complet des établissements par niveau et type
-const schools: School[] = [
-  // === NIVEAU 3ème - Lycées & Collèges ===
-  { name: 'Lycée Philippe Zinda Kaboré', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série C', 'Série D', 'Série A'], description: 'Établissement prestigieux, excellent pour sciences et lettres' },
-  { name: 'Prytanée Militaire du Kadiogo', city: 'Kadiogo', type: 'Lycée', level: '3ème', programs: ['Série C', 'Série D'], description: 'Lycée militaire réputé, discipline rigoureuse, excellents résultats' },
-  { name: 'Lycée Bogodogo', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série D', 'Série A'], description: 'Lycée généraliste avec bons programmes en sciences' },
-  { name: 'Lycée Ouezzin Coulibaly', city: 'Bobo-Dioulasso', type: 'Lycée', level: '3ème', programs: ['Série C', 'Série D'], description: 'Lycée de référence dans le sud du Burkina' },
-  { name: 'Lycée Nelson Mandela', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série A', 'Série G'], description: 'Fort en littérature et sciences humaines' },
-  { name: 'Lycée Technique de Ouagadougou', city: 'Ouagadougou', type: 'Lycée Technique', level: '3ème', programs: ['Série F', 'Série E'], description: 'Spécialisé en filières techniques et technologiques' },
-  { name: 'Lycée Provincial', city: 'Koudougou', type: 'Lycée', level: '3ème', programs: ['Série A', 'Série C', 'Série G'], description: 'Établissement régional bien équipé' },
-  { name: 'Lycée Professionnel National', city: 'Ouagadougou', type: 'Lycée Professionnel', level: '3ème', programs: ['CAP Comptabilité', 'CAP Mécanique'], description: 'Formation professionnelle de qualité' },
-  { name: 'Lycée Professionnel Régional', city: 'Bobo-Dioulasso', type: 'Lycée Professionnel', level: '3ème', programs: ['CAP Dessin', 'CAP Bâtiment'], description: 'Excellente réputation en métiers du bâtiment' },
-  { name: 'Centre de Formation Professionnelle du Plateau', city: 'Ouagadougou', type: 'Centre de Formation', level: '3ème', programs: ['CAP Mécanique Auto', 'CAP Électricité'], description: 'Formation pratique directe au marché' },
-  { name: 'Centre de Formation Métiers Bois', city: 'Bobo-Dioulasso', type: 'Centre de Formation', level: '3ème', programs: ['CAP Menuiserie', 'BEP Ébénisterie'], description: 'Spécialisé dans les métiers du bois et artisanat' },
-  { name: 'Lycée Privé de la Jeunesse (Internat)', city: 'Ouagadougou', type: 'Lycée', level: '3ème', programs: ['Série D', 'Série A'], description: 'Lycée avec internat offrant un encadrement strict' },
-  { name: 'Collège Privé Elite', city: 'Koudougou', type: 'Collège', level: '3ème', programs: ['Général'], description: 'Collège de proximité avec de bons résultats' },
-  
-  // === NIVEAU TERMINALE - Universités & Instituts ===
-  { name: 'Université Joseph Ki-Zerbo', city: 'Ouagadougou', type: 'Université', level: 'Terminale', programs: ['Informatique', 'Médecine', 'Droit', 'Communication'], description: 'Université publique principale, très complète' },
-  { name: 'Université Nazi Boni', city: 'Bobo-Dioulasso', type: 'Université', level: 'Terminale', programs: ['Agronomie', 'Médecine', 'Sciences'], description: 'Université de référence du sud, forte en sciences' },
-  { name: 'Université Thomas Sankara', city: 'Ouagadougou', type: 'Université', level: 'Terminale', programs: ['Économie', 'Gestion', 'Commerce'], description: 'Spécialisée en sciences économiques et gestion' },
-  { name: 'Burkina Institute of Technology (BIT)', city: 'Koudougou', type: 'Institut', level: 'Terminale', programs: ['Génie Informatique', 'Génie Civil'], description: 'Institut technologique privé réputé' },
-  { name: 'Institut Supérieur d\'Ingénierie', city: 'Ouagadougou', type: 'Institut', level: 'Terminale', programs: ['Génie Civil', 'Génie Électrique'], description: 'Formation d\'ingénieurs de haut niveau' },
-  { name: 'École Supérieure Polytechnique', city: 'Dédougou', type: 'Institut', level: 'Terminale', programs: ['Génie Civil', 'Génie Mécanique'], description: 'École polytechnique prestigieuse' },
-  { name: 'ISTIC (Institut Supérieur des Télécommunications et d\'Informatique)', city: 'Ouagadougou', type: 'Institut', level: 'Terminale', programs: ['Informatique', 'Télécommunications', 'Réseaux'], description: 'Excellence en informatique et télécom' },
-  { name: 'Institut du Développement Rural', city: 'Bobo-Dioulasso', type: 'Institut', level: 'Terminale', programs: ['Agronomie', 'Zootechnie', 'Foresterie'], description: 'Référence en sciences agronomiques' },
-];
-
-// Catalogue des filières/séries avec débouchés détaillés
-const programs: Program[] = [
-  // Séries 3ème
-  { 
-    id: 'serie-c',
-    name: 'Série C (Maths/Physique)',
-    level: '3ème',
-    type: 'Série',
-    competences: ['Mathématiques', 'Physique-Chimie', 'Sciences', 'Logique'],
-    debouches: ['Ingénieur informatique', 'Ingénieur civil', 'Mathématicien', 'Physicien', 'Chercheur scientifique', 'Professeur sciences'],
-    description: 'Filière scientifique exigeante pour les passionnés de maths et sciences exactes.'
-  },
-  { 
-    id: 'serie-d',
-    name: 'Série D (Sciences de la Vie)',
-    level: '3ème',
-    type: 'Série',
-    competences: ['Biologie', 'Chimie', 'Sciences Naturelles', 'Écologie'],
-    debouches: ['Médecin', 'Pharmacien', 'Biologiste', 'Vétérinaire', 'Agronome', 'Chercheur', 'Infirmier'],
-    description: 'Idéale pour les amateurs de biologie et sciences du vivant.'
-  },
-  { 
-    id: 'serie-a',
-    name: 'Série A (Littérature/Langues)',
-    level: '3ème',
-    type: 'Série',
-    competences: ['Français', 'Littérature', 'Philosophie', 'Histoire-Géographie', 'Langues'],
-    debouches: ['Journaliste', 'Écrivain', 'Professeur', 'Traducteur', 'Critique', 'Historien', 'Animateur'],
-    description: 'Pour les passionnés de lettres, langues et sciences humaines.'
-  },
-  { 
-    id: 'serie-g',
-    name: 'Série G (Gestion/Commerce)',
-    level: '3ème',
-    type: 'Série',
-    competences: ['Comptabilité', 'Économie', 'Gestion', 'Commerce'],
-    debouches: ['Comptable', 'Gestionnaire', 'Chef d\'entreprise', 'Commerçant', 'Secrétaire direction', 'Agent douane'],
-    description: 'Débouche vers métiers de gestion, commerce et administration.'
-  },
-  
-  // CAP/BEP
-  { 
-    id: 'cap-mecanique',
-    name: 'CAP/BEP Mécanique Auto',
-    level: '3ème',
-    type: 'CAP/BEP',
-    competences: ['Mécanique', 'Diagnostic', 'Réparation', 'Électricité auto'],
-    debouches: ['Mécanicien automobile', 'Carrossier', 'Électricien auto', 'Responsable atelier', 'Entrepreneur'],
-    description: 'Formation pratique directe aux métiers de l\'automobile.'
-  },
-  { 
-    id: 'cap-dessin-batiment',
-    name: 'CAP Dessin Bâtiment',
-    level: '3ème',
-    type: 'CAP/BEP',
-    competences: ['Dessin technique', 'Bâtiment', 'CAO', 'Construction'],
-    debouches: ['Dessinateur bâtiment', 'Technicien BTP', 'Chef de chantier', 'Architecte', 'Constructeur'],
-    description: 'Formation en dessin technique et bâtiment.'
-  },
-  { 
-    id: 'cap-comptabilite',
-    name: 'CAP Comptabilité',
-    level: '3ème',
-    type: 'CAP/BEP',
-    competences: ['Comptabilité', 'Gestion', 'Informatique', 'Fiscalité'],
-    debouches: ['Comptable', 'Aide-comptable', 'Gestionnaire', 'Expert-comptable', 'Auditeur'],
-    description: 'Formation en comptabilité générale et gestion.'
-  },
-  
-  // Licences Université
-  { 
-    id: 'licence-informatique',
-    name: 'Licence Informatique/Génie Logiciel',
-    level: 'Terminale',
-    type: 'Licence',
-    competences: ['Programmation', 'Bases données', 'Réseaux', 'Conception logicielle'],
-    debouches: ['Développeur', 'Ingénieur informatique', 'Chef projet IT', 'Data scientist', 'Administrateur systèmes'],
-    description: 'Formation complète en informatique et développement logiciel.'
-  },
-  { 
-    id: 'licence-medecine',
-    name: 'Médecine & Sciences Santé',
-    level: 'Terminale',
-    type: 'Licence',
-    competences: ['Biologie', 'Chimie', 'Anatomie', 'Physiologie'],
-    debouches: ['Médecin', 'Pharmacien', 'Infirmier', 'Biologiste médical', 'Chercheur santé'],
-    description: 'Programmes rigoureux en sciences médicales.'
-  },
-  { 
-    id: 'licence-agronomie',
-    name: 'Sciences Agronomiques',
-    level: 'Terminale',
-    type: 'Licence',
-    competences: ['Agronomie', 'Écologie', 'Élevage', 'Gestion exploitation'],
-    debouches: ['Agronome', 'Chercheur agricole', 'Gestionnaire exploitation', 'Conseiller agricole', 'Entrepreneur agricole'],
-    description: 'Formation en agriculture moderne et développement rural.'
-  },
-];
-
 export function getAllSchools(level?: '3ème' | 'Terminale' | 'Supérieur'): School[] {
+  const schools = BURKINA_SCHOOLS as School[];
   if (!level) return schools;
   return schools.filter(s => s.level === level || (level === 'Supérieur' && s.level === 'Terminale'));
 }
 
 export function getSchoolsByType(type: School['type']): School[] {
-  return schools.filter(s => s.type === type);
+  return (BURKINA_SCHOOLS as School[]).filter(s => s.type === type);
 }
 
 export function getAllPrograms(level?: '3ème' | 'Terminale' | 'Supérieur'): Program[] {
+  const programs = BURKINA_PROGRAMS as Program[];
   if (!level) return programs;
   return programs.filter(p => p.level === level || (level === 'Supérieur' && p.level === 'Terminale'));
 }
 
-
 function scoreProgram(profile: UserProfile, tags: string[]) {
   const interestMatch = tags.filter(tag => profile.interests.map(i => i.toLowerCase()).includes(tag.toLowerCase())).length;
   const skillMatch = tags.filter(tag => profile.skills.toLowerCase().includes(tag.toLowerCase())).length;
-  return Math.min(0.95, 0.35 + interestMatch * 0.2 + skillMatch * 0.1 + 0.1);
+  const rawScore = Math.min(0.95, 0.35 + interestMatch * 0.2 + skillMatch * 0.1 + 0.1);
+  return Math.round(rawScore * 100);
 }
 
 export function getRecommendationsForProfile(profile: UserProfile): { recommendations: Recommendation[]; scholarships: Scholarship[]; analysis: string } {
   const level = normalizeEducation(profile.education);
   let basePrograms = level === '3ème' ? collegePrograms : lyceePrograms;
 
-  const scoredPrograms = basePrograms.map(program => ({
-    ...program,
-    score: scoreProgram(profile, program.tags as string[])
-  }))
+  const scoredPrograms = basePrograms.map(program => {
+    const originalProgram = BURKINA_PROGRAMS.find(p => p.name === program.program);
+    return {
+      ...program,
+      score: scoreProgram(profile, program.tags as string[]),
+      programDetails: originalProgram as Program
+    };
+  })
   .sort((a, b) => b.score - a.score)
   .slice(0, 6);
 
@@ -341,7 +223,7 @@ import { useOfflineStore } from '../store/useOfflineStore';
 
 async function fetchOllama(messages: { role: string; content: string }[], maxTokens = 150, temperature = 0.5): Promise<string> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for local Ollama
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for local Ollama
 
   const response = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
@@ -353,7 +235,8 @@ async function fetchOllama(messages: { role: string; content: string }[], maxTok
       options: {
         temperature: temperature,
         top_p: 0.9,
-        num_predict: maxTokens
+        num_predict: maxTokens,
+        num_ctx: 2048
       }
     }),
     signal: controller.signal,
@@ -401,22 +284,26 @@ async function fetchGroq(messages: { role: string; content: string }[], maxToken
 export async function fetchAI(messages: { role: string; content: string }[], maxTokens = 150, temperature = 0.5): Promise<string> {
   const store = useOfflineStore.getState();
   
-  // Try Ollama First
+  const useOnlineApi = store.isOnline && !store.isOffline;
+
+  if (useOnlineApi) {
+    try {
+      const reply = await fetchGroq(messages, maxTokens, temperature);
+      store.setAIEngineStatus('groq');
+      return reply;
+    } catch (err) {
+      console.log('Groq API non disponible. Essai avec Ollama...', err);
+      // Fallback to local Ollama if Groq fails
+    }
+  }
+
+  // Try Ollama Local (when offline, or when Groq fails)
   try {
     const reply = await fetchOllama(messages, maxTokens, temperature);
     store.setAIEngineStatus('ollama');
     return reply;
   } catch (err) {
-    console.log('Ollama local non disponible. Essai avec Groq API...', err);
-  }
-
-  // Try Groq Second
-  try {
-    const reply = await fetchGroq(messages, maxTokens, temperature);
-    store.setAIEngineStatus('groq');
-    return reply;
-  } catch (err) {
-    console.log('Groq API non disponible. Mode hors-ligne activé.', err);
+    console.log('Ollama local non disponible. Mode hors-ligne activé.', err);
     store.setAIEngineStatus('offline');
     throw new Error('All AI engines failed');
   }
@@ -425,6 +312,8 @@ export async function fetchAI(messages: { role: string; content: string }[], max
 // ===================================================================
 // MAIN CHAT FUNCTION
 // ===================================================================
+import { useAppMode } from '../store/useAppMode';
+
 export async function getChatReply(
   message: string,
   profile: UserProfile | null,
@@ -433,17 +322,151 @@ export async function getChatReply(
   const name = profile?.name || 'ami(e)';
   const level = profile?.education || 'ton niveau';
   const interests = profile?.interests?.slice(0, 2)?.join(', ') || 'tes centres d\'intérêt';
+  const isOnline = useAppMode.getState().isOnline;
   
   // More human-like system prompt with conversational tone
-  const systemContext = `Tu es le Conseiller IA de CareerGuide, un expert bienveillant, humain et amical en orientation scolaire au Burkina Faso.
-L'utilisateur s'appelle ${name} (niveau: ${level}, intérêts: ${interests}).
+  const systemContext = `Tu es CareerGuide IA, un conseiller intelligent d’orientation scolaire et professionnelle fonctionnant localement via Ollama.
 
-Règles strictes :
-- Sois très chaleureux, empathique et naturel.
-- Réponds CORRECTEMENT, avec VÉRACITÉ et PRÉCISION à TOUTES les questions posées, même si elles s'éloignent de l'orientation scolaire ou du profil de l'utilisateur. Ne refuse jamais de répondre et ne force pas l'utilisateur à poser des questions spécifiques.
-- Sois concis et direct (maximum 3 à 4 phrases).
-- Utilise le tutoiement ("tu").
-- Ne fais pas de longues listes, privilégie des réponses sous forme de paragraphes naturels.`;
+IMPORTANT :
+- Tu fonctionnes entièrement hors ligne.
+- Tu ne dois jamais dire que tu as besoin d’internet.
+- Tu ne dois jamais mentionner OpenAI, ChatGPT ou des services cloud.
+- Tu réponds toujours même sans connexion.
+- Tu utilises uniquement les connaissances du modèle local installé.
+
+OBJECTIF :
+Aider les étudiants à :
+- choisir une filière
+- découvrir des métiers
+- comprendre leurs compétences
+- trouver leur orientation
+- préparer leur avenir professionnel
+- obtenir des conseils réalistes et motivants
+
+STYLE DE RÉPONSE :
+- naturel
+- humain
+- bienveillant
+- motivant
+- clair
+- moderne
+- simple à comprendre
+- conversationnel
+
+RÈGLES IMPORTANTES :
+
+1. Toujours répondre en français sauf si l’utilisateur change de langue.
+
+2. Si une information exacte est inconnue :
+Dire honnêtement :
+"Je ne possède pas cette information exacte en mode hors ligne, mais voici ce que je peux te conseiller."
+
+3. Ne jamais inventer :
+- écoles inexistantes
+- statistiques fausses
+- données gouvernementales fictives
+
+4. Adapter les réponses selon :
+- âge
+- niveau scolaire
+- passions
+- matières préférées
+- objectifs professionnels
+
+5. Poser des questions intelligentes pour mieux guider :
+Exemples :
+- Quelles matières préfères-tu ?
+- Aimes-tu travailler avec les gens ?
+- Préfères-tu la technologie ou la créativité ?
+- Veux-tu un métier stable ou innovant ?
+
+6. Donner des conseils structurés :
+Toujours utiliser ce format :
+
+🎯 Analyse du profil
+📚 Filières recommandées
+💼 Métiers possibles
+🧠 Compétences à développer
+🚀 Conseils pratiques
+
+7. Être encourageant sans être faux.
+
+8. Si l’utilisateur est perdu :
+proposer un mini bilan d’orientation.
+
+9. Si l’utilisateur mentionne :
+- médecine
+- informatique
+- commerce
+- ingénierie
+- droit
+- art
+- IA
+- cybersécurité
+etc.
+
+Donner :
+- débouchés
+- difficultés
+- compétences requises
+- conseils de réussite
+
+10. Optimisation Offline :
+- Réponses courtes à moyennes
+- Éviter les textes trop longs
+- Être rapide et fluide
+- Prioriser la clarté
+
+11. Si l’utilisateur demande des recommandations :
+Toujours proposer plusieurs options.
+
+12. Si l’utilisateur demande :
+"Que faire plus tard ?"
+Commencer par analyser :
+- personnalité
+- passions
+- niveau scolaire
+- objectifs
+
+13. Ne jamais répondre :
+"Je ne peux pas fonctionner hors ligne."
+
+14. Si le modèle manque d’informations :
+utiliser le raisonnement général au lieu de bloquer la réponse.
+
+15. Toujours garder un ton positif et motivant.
+
+EXEMPLE DE BONNE RÉPONSE :
+
+Utilisateur :
+"Je veux faire médecine"
+
+Réponse :
+🎯 Analyse du profil :
+La médecine est idéale si tu aimes les sciences, aider les autres et travailler avec rigueur.
+
+📚 Filières recommandées :
+- Médecine générale
+- Pharmacie
+- Dentisterie
+- Biologie médicale
+
+💼 Métiers possibles :
+- Médecin
+- Chirurgien
+- Pharmacien
+- Chercheur médical
+
+🧠 Compétences à développer :
+- Biologie
+- Discipline
+- Gestion du stress
+- Communication
+
+🚀 Conseils pratiques :
+Travaille particulièrement les sciences dès maintenant et prépare-toi à un parcours exigeant mais passionnant.
+
+Profil de l'utilisateur actuel : Nom: ${name}, Niveau: ${level}, Intérêts: ${interests}.`;
 
   try {
     const messages = [
@@ -468,11 +491,11 @@ Règles strictes :
       }
     }
   } catch (error) {
-    console.log('API Cloud non disponible, utilisation du fallback.', error);
+    console.log('API Cloud non disponible et Ollama introuvable.', error);
   }
 
-  // Fallback: Smart rules-based response (works offline)
-  return getSmartFallback(message, profile);
+  // Fallback si l'IA échoue ou si hors-ligne sans modèle local
+  return "Désolé, je ne peux pas générer de réponse personnalisée en mode hors-ligne sans le modèle IA (Ollama) installé sur ton appareil. Connecte-toi à internet pour discuter avec moi !";
 }
 
 // Cache for Wikipedia summaries

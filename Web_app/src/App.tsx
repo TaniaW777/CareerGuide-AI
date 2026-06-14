@@ -10,6 +10,7 @@ import Recommendations from './pages/Recommendations';
 import Chat from './pages/Chat';
 import Testimonials from './pages/Testimonials';
 import Settings from './pages/Settings';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Layout from './components/Layout';
 
 function App() {
@@ -22,6 +23,14 @@ function App() {
     document.body.classList.toggle('dark', isDark);
     document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
   }, [theme]);
+
+  // Initialize the offline store status (Ollama is used for offline web)
+  useEffect(() => {
+    const { setForcedOffline, setEmbeddedAIEnabled, setEmbeddedAIStatus } = useOfflineStore.getState();
+    setForcedOffline(true);
+    setEmbeddedAIEnabled(true);
+    setEmbeddedAIStatus('ready'); // Automatically ready since we rely on external Ollama
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setOfflineStatus(false);
@@ -49,6 +58,7 @@ function App() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/testimonials" element={<Testimonials />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
         </Routes>
       </Layout>
     </div>

@@ -3,7 +3,7 @@
 import { useOfflineStore } from '../store/useOfflineStore';
 
 export default function Settings() {
-  const { theme, setTheme, clearStorage, aiEngineStatus } = useOfflineStore();
+  const { theme, setTheme, clearStorage, aiEngineStatus, isOnline, setOnlineStatus, setForcedOffline, setOfflineStatus } = useOfflineStore();
 
   return (
     <div className="max-w-3xl mx-auto py-12 px-4">
@@ -86,17 +86,68 @@ export default function Settings() {
                 Réinitialiser l'application
               </button>
             </div>
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-              <button
-                type="button"
-                onClick={() => {
-                  clearStorage();
-                  window.location.reload();
-                }}
-                className="text-red-600 dark:text-red-400 font-semibold text-sm hover:underline"
-              >
-                Supprimer toutes mes données
-              </button>
+
+            {/* Connexion/Déconnexion */}
+            <div className="p-6 border-t border-gray-100 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Connexion</h2>
+              <div className="mt-4 flex items-center space-x-4">
+                <span className={`px-3 py-1 rounded ${isOnline ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                  {isOnline ? '🟢 En ligne' : '🔴 Hors ligne'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newStatus = !isOnline;
+                    setOnlineStatus(newStatus);
+                    setForcedOffline(!newStatus);
+                    setOfflineStatus(!newStatus);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                >
+                  {isOnline ? 'Passer hors‑ligne' : 'Se connecter'}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
+              <div>
+                <a href="/privacy" className="text-blue-600 dark:text-blue-400 font-semibold text-sm hover:underline">
+                  Voir la Politique de Confidentialité
+                </a>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearStorage();
+                    window.location.reload();
+                  }}
+                  className="text-red-600 dark:text-red-400 font-semibold text-sm hover:underline"
+                >
+                  Supprimer toutes mes données
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">À propos & Licence</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              <strong>CareerGuide AI</strong> a été conçu pour aider les élèves et étudiants du Burkina Faso à trouver leur voie, même sans connexion internet, grâce à une IA locale sécurisée.
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              Distribué sous <strong>Licence MIT</strong>. Vous êtes libre d'utiliser, copier, modifier et distribuer ce logiciel, sous réserve d'inclure la notice de copyright d'origine.
+            </p>
+            <div className="pt-4 flex flex-col sm:flex-row gap-4">
+              <a href="https://github.com/TaniaW777/CareerGuide-AI" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 font-semibold text-sm hover:underline">
+                Voir le code source sur GitHub
+              </a>
+              <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 font-semibold text-sm hover:underline">
+                Lire la licence MIT
+              </a>
             </div>
           </div>
         </section>

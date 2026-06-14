@@ -20,11 +20,13 @@
 
 /* ===== LIGHT MODE (Education Theme) ===== */
 :root {
-  --background: #fdfdfd; /* White with a tint */
+  --primary: #0057b8;
+  --secondary: #003366;
+  --background: #ffffff;
   --surface: #ffffff;
-  --text: #0f172a; /* Slate 900 */
-  --text-muted: #475569; /* Slate 600 */
-  --border: #e2e8f0; /* Slate 200 */
+  --text: #111111;
+  --text-muted: #475569;
+  --border: #e2e8f0;
 }
 
 /* ===== DARK MODE (Premium Education Theme) ===== */

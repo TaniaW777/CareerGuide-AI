@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../core/config/backend_config.dart';
+import 'gemma_engine.dart';
 import '../backend_service.dart';
 import '../database/local_db.dart';
 import 'scoring_service.dart';
@@ -109,12 +110,18 @@ class LocalAIService {
 
     debugPrint("🤖 LocalAI: Génération de réponse intelligente offline...");
     try {
-      debugPrint("🦙 Tentative avec Ollama local...");
+      // Try Gemma model first
+      final gemmaReply = await GemmaEngine.generate(message, profile);
+      if (gemmaReply != null && gemmaReply.trim().isNotEmpty) {
+        return gemmaReply;
+      }
+      debugPrint("⚙️ GemmaEngine unavailable or empty, falling back to Ollama...");
+      // Ollama fallback (if still present)
       final ollamaReply = await OllamaEngine.generate(message, profile);
       if (ollamaReply != null && ollamaReply.trim().isNotEmpty) {
         return ollamaReply;
       }
-      debugPrint("🦙 Ollama indisponible, bascule sur le moteur interne basé sur des règles.");
+      debugPrint("🦙 Ollama unavailable, falling back on rule‑based engine.");
       final reply = await OfflineAIEngine.generateChatReply(message, profile);
       return reply;
     } catch (e) {
@@ -147,8 +154,11 @@ class LocalAIService {
       
       // Seed with university data if needed
       await LocalDatabase.seedDatabase();
-      debugPrint("✅ Données pédagogiques chargées");
-      
+      debugPrint('✅ Données pédagogiques chargées');
+
+      // Initialise the Gemma offline model
+      await GemmaEngine.initialize();
+      debugPrint('✅ Gemma model ready');      
       debugPrint("🎉 Système IA 100% OFFLINE prêt!");
     } catch (e) {
       debugPrint("⚠️ Erreur lors de l'initialisation: $e");

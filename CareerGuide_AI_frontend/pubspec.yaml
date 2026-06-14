@@ -49,6 +49,7 @@ dependencies:
   genui: ^0.9.0
   mockito: ^5.6.4
   build_runner: ^2.15.0
+  flutter_gemma: ^0.13.6
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +77,7 @@ flutter:
     - assets/videos/
     - assets/images/
     - assets/data/
+    - assets/models/gemma/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

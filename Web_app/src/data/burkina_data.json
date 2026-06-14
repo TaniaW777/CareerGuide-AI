@@ -1,0 +1,398 @@
+{
+  "universites": [
+    {
+      "id": "ujkz",
+      "nom": "Université Joseph Ki-Zerbo",
+      "sigle": "UJKZ",
+      "ville": "Ouagadougou",
+      "region": "Kadiogo",
+      "type": "public",
+      "maps": "https://maps.google.com/?q=Université+Joseph+Ki-Zerbo+Ouagadougou",
+      "site": "https://www.ujkz.bf",
+      "telephone": "+226 25 49 77 77",
+      "description": "Plus grande université publique du Burkina Faso. Offre des formations en sciences, lettres, technologie et gestion.",
+      "filieres": ["Informatique", "Génie Civil", "Médecine", "Droit", "Gestion", "Agronomie", "Physique-Chimie"]
+    },
+    {
+      "id": "2ie",
+      "nom": "2iE - Institut Africain de l'Eau",
+      "sigle": "2iE",
+      "ville": "Ouagadougou",
+      "region": "Kadiogo",
+      "type": "public",
+      "maps": "https://maps.google.com/?q=2iE+Ouagadougou",
+      "site": "https://www.2ie-edu.org",
+      "telephone": "+226 25 49 28 00",
+      "description": "Spécialisée en ingénierie de l'eau, génie civil et énergie. Très reconnue en Afrique de l'Ouest.",
+      "filieres": ["Génie Civil", "Génie de l'Eau", "Énergie Renouvelable", "Hydraulique"]
+    },
+    {
+      "id": "uts",
+      "nom": "Université Thomas Sankara",
+      "sigle": "UTS",
+      "ville": "Ouagadougou",
+      "region": "Kadiogo",
+      "type": "public",
+      "maps": "https://maps.google.com/?q=Université+Thomas+Sankara+Ouagadougou",
+      "site": "https://www.uts.bf",
+      "telephone": "+226 25 38 55 00",
+      "description": "Université publique proposant des formations en informatique, gestion et technologie.",
+      "filieres": ["Informatique", "Gestion", "Marketing", "Communication"]
+    },
+    {
+      "id": "unb",
+      "nom": "Université Nazi Boni",
+      "sigle": "UNB",
+      "ville": "Bobo-Dioulasso",
+      "region": "Houet",
+      "type": "public",
+      "maps": "https://maps.google.com/?q=Université+Nazi+Boni+Bobo+Dioulasso",
+      "site": "https://www.unb.bf",
+      "telephone": "+226 20 97 02 02",
+      "description": "Université publique de Bobo-Dioulasso. Formations en agronomie, médecine et technologie.",
+      "filieres": ["Agronomie", "Médecine Vétérinaire", "Technologies Agricoles", "Biologie"]
+    },
+    {
+      "id": "uddg",
+      "nom": "Université de Dédougou",
+      "sigle": "UDDG",
+      "ville": "Dédougou",
+      "region": "Mouhoun",
+      "type": "public",
+      "maps": "https://maps.google.com/?q=Université+de+Dédougou",
+      "site": "https://www.uddg.bf",
+      "description": "Université publique du Mouhoun. Formations locales en technologie et gestion.",
+      "filieres": ["Gestion", "Technologie", "Agriculture"]
+    },
+    {
+      "id": "ugb",
+      "nom": "Université George Habré",
+      "sigle": "UGH",
+      "ville": "Ouagadougou",
+      "region": "Kadiogo",
+      "type": "private",
+      "maps": "https://maps.google.com/?q=Université+George+Habré+Ouagadougou",
+      "site": "https://www.ugh.bf",
+      "telephone": "+226 25 30 85 60",
+      "description": "Université privée réputée. Formations en droit, gestion et informatique.",
+      "filieres": ["Droit", "Gestion Juridique", "Informatique", "Management"]
+    },
+    {
+      "id": "instad",
+      "nom": "Institut Supérieur de Technologies Appliquées et de Développement (INSTAD)",
+      "sigle": "INSTAD",
+      "ville": "Ouagadougou",
+      "region": "Kadiogo",
+      "type": "private",
+      "maps": "https://maps.google.com/?q=INSTAD+Ouagadougou",
+      "site": "https://www.instad.bf",
+      "telephone": "+226 25 36 44 66",
+      "description": "École d'ingénierie avec formations en informatique, télécom et énergies renouvelables.",
+      "filieres": ["Informatique", "Télécommunications", "Génie Électrique", "Énergies Renouvelables"]
+    },
+    {
+      "id": "esp",
+      "nom": "École Supérieure Polytechnique (ESP)",
+      "sigle": "ESP",
+      "ville": "Ouagadougou",
+      "region": "Kadiogo",
+      "type": "public",
+      "maps": "https://maps.google.com/?q=École+Supérieure+Polytechnique+Ouagadougou",
+      "site": "https://www.esp.bf",
+      "telephone": "+226 25 36 00 00",
+      "description": "Grande école d'ingénierie publique. Formations reconnues en génie civil, électrique et mécanique.",
+      "filieres": ["Génie Civil", "Génie Électrique", "Génie Mécanique", "Génie Informatique"]
+    }
+  ],
+  "filieres": [
+    {
+      "id": "informatique",
+      "nom": "Informatique",
+      "description": "Formation à la programmation, développement logiciel, systèmes informatiques et technologies numériques.",
+      "series_compatibles": ["C"],
+      "debouches": [
+        "Développeur Web/Mobile",
+        "Ingénieur Informatique",
+        "Administrateur Système",
+        "Ingénieur IA/Machine Learning",
+        "Consultant IT",
+        "Testeur Logiciel"
+      ],
+      "competences_requises": ["Logique", "Résolution de problèmes", "Rigueur"],
+      "salaire_indicatif": "400000-800000 FCFA/mois",
+      "universites": ["UJKZ", "UTS", "2iE", "INSTAD", "ESP"],
+      "debouches_entreprises": ["Banques", "Télécoms", "ONG Internationales", "Startups Tech"]
+    },
+    {
+      "id": "genie_civil",
+      "nom": "Génie Civil",
+      "description": "Conception et réalisation d'ouvrages : bâtiments, ponts, routes, infrastructure.",
+      "series_compatibles": ["C"],
+      "debouches": [
+        "Ingénieur BTP",
+        "Conducteur de Travaux",
+        "Chef de Chantier",
+        "Bureau d'Études",
+        "Inspecteur de Travaux"
+      ],
+      "competences_requises": ["Mathématiques", "Créativité", "Gestion de projets"],
+      "salaire_indicatif": "450000-900000 FCFA/mois",
+      "universites": ["2iE", "ESP", "UJKZ"],
+      "debouches_entreprises": ["Entreprises BTP", "Ministères", "Collectivités"]
+    },
+    {
+      "id": "medecine",
+      "nom": "Médecine",
+      "description": "Formation pour devenir médecin généraliste, chirurgien ou spécialiste.",
+      "series_compatibles": ["D"],
+      "debouches": [
+        "Médecin Généraliste",
+        "Chirurgien",
+        "Médecin Spécialiste",
+        "Médecin Hospitalier",
+        "Médecin de Santé Publique"
+      ],
+      "competences_requises": ["Empathie", "Précision", "Responsabilité"],
+      "salaire_indicatif": "500000-1500000 FCFA/mois",
+      "universites": ["UJKZ"],
+      "debouches_entreprises": ["Hôpitaux", "Cliniques Privées", "ONG Santé"]
+    },
+    {
+      "id": "agronomie",
+      "nom": "Agronomie",
+      "description": "Formation en agriculture moderne, gestion des cultures et zootechnie.",
+      "series_compatibles": ["D"],
+      "debouches": [
+        "Ingénieur Agronome",
+        "Conseiller Agricole",
+        "Gestionnaire d'Exploitation",
+        "Chercheur Agricole"
+      ],
+      "competences_requises": ["Biologie", "Patience", "Connaissance terrain"],
+      "salaire_indicatif": "300000-600000 FCFA/mois",
+      "universites": ["UNB", "UJKZ"],
+      "debouches_entreprises": ["Ministère Agriculture", "ONG Environnement", "Exploitations"]
+    },
+    {
+      "id": "gestion",
+      "nom": "Gestion et Management",
+      "description": "Formation en gestion d'entreprise, management, marketing et ressources humaines.",
+      "series_compatibles": ["E"],
+      "debouches": [
+        "Gestionnaire d'Entreprise",
+        "Manager",
+        "Responsable RH",
+        "Consultant Management",
+        "Directeur Général"
+      ],
+      "competences_requises": ["Leadership", "Communication", "Analyse"],
+      "salaire_indicatif": "400000-800000 FCFA/mois",
+      "universites": ["UTS", "UJKZ", "UGH"],
+      "debouches_entreprises": ["Grandes Entreprises", "Banques", "ONG"]
+    },
+    {
+      "id": "droit",
+      "nom": "Droit",
+      "description": "Formation en droit civil, pénal, commercial et droit public.",
+      "series_compatibles": ["A", "C"],
+      "debouches": [
+        "Avocat",
+        "Magistrat",
+        "Notaire",
+        "Juriste d'Entreprise",
+        "Conseil Juridique"
+      ],
+      "competences_requises": ["Rigueur", "Éloquence", "Esprit critique"],
+      "salaire_indicatif": "350000-1000000 FCFA/mois",
+      "universites": ["UJKZ", "UGH"],
+      "debouches_entreprises": ["Cabinets d'Avocats", "Ministères", "Entreprises"]
+    },
+    {
+      "id": "communication",
+      "nom": "Communication et Journalisme",
+      "description": "Formation en communication, journalisme, médias et relations publiques.",
+      "series_compatibles": ["A"],
+      "debouches": [
+        "Journaliste",
+        "Responsable Communication",
+        "Chargé de Presse",
+        "Producteur Audiovisuel",
+        "Community Manager"
+      ],
+      "competences_requises": ["Créativité", "Écriture", "Aisance orale"],
+      "salaire_indicatif": "250000-600000 FCFA/mois",
+      "universites": ["UTS", "UJKZ"],
+      "debouches_entreprises": ["Médias", "Agences de Presse", "ONG", "Entreprises"]
+    },
+    {
+      "id": "architecture",
+      "nom": "Architecture",
+      "description": "Formation en conception de bâtiments et d'espaces urbains.",
+      "series_compatibles": ["C"],
+      "debouches": [
+        "Architecte",
+        "Urbaniste",
+        "Architecte d'Intérieur",
+        "Maître d'Œuvre"
+      ],
+      "competences_requises": ["Créativité", "Mathématiques", "Dessin"],
+      "salaire_indicatif": "400000-900000 FCFA/mois",
+      "universites": ["UJKZ", "ESP"],
+      "debouches_entreprises": ["Cabinets Architecture", "Ministère Urbain", "Entreprises BTP"]
+    },
+    {
+      "id": "energie",
+      "nom": "Énergie et Énergies Renouvelables",
+      "description": "Formation en électricité, énergies renouvelables (solaire, éolien) et efficacité énergétique.",
+      "series_compatibles": ["C"],
+      "debouches": [
+        "Ingénieur Énergie",
+        "Technicien Énergies Renouvelables",
+        "Responsable Efficacité Énergétique"
+      ],
+      "competences_requises": ["Physique", "Innovation", "Écologie"],
+      "salaire_indicatif": "350000-800000 FCFA/mois",
+      "universites": ["2iE", "ESP", "INSTAD"],
+      "debouches_entreprises": ["Ministère Énergie", "Entreprises Électriques", "ONG Climat"]
+    },
+    {
+      "id": "pharmacie",
+      "nom": "Pharmacie",
+      "description": "Formation pour devenir pharmacien ou chercheur en pharmacologie.",
+      "series_compatibles": ["D"],
+      "debouches": [
+        "Pharmacien",
+        "Chercheur Pharmacologie",
+        "Responsable Qualité Pharma",
+        "Représentant Pharmaceutique"
+      ],
+      "competences_requises": ["Chimie", "Rigueur", "Responsabilité"],
+      "salaire_indicatif": "400000-900000 FCFA/mois",
+      "universites": ["UJKZ"],
+      "debouches_entreprises": ["Pharmacies", "Laboratoires", "Ministère Santé"]
+    },
+    {
+      "id": "marketing",
+      "nom": "Marketing et Commerce",
+      "description": "Formation en stratégie marketing, vente, e-commerce et publicité.",
+      "series_compatibles": ["E"],
+      "debouches": [
+        "Chef de Produit",
+        "Directeur Commercial",
+        "Responsable Marketing",
+        "Consultant Commercial"
+      ],
+      "competences_requises": ["Persuasion", "Analyse", "Créativité"],
+      "salaire_indicatif": "300000-700000 FCFA/mois",
+      "universites": ["UTS", "UJKZ"],
+      "debouches_entreprises": ["Grandes Chaînes", "Agences Marketing", "Entreprises Export"]
+    },
+    {
+      "id": "mines_petrole",
+      "nom": "Génie Minier et Pétrolier",
+      "description": "Formation en exploitation minière et extraction pétrolière (potentiel au Burkina).",
+      "series_compatibles": ["C"],
+      "debouches": [
+        "Ingénieur Mines",
+        "Ingénieur Pétrolier",
+        "Responsable Site Minier"
+      ],
+      "competences_requises": ["Géologie", "Mathématiques", "Sécurité"],
+      "salaire_indicatif": "600000-1500000 FCFA/mois",
+      "universites": ["ESP", "UJKZ"],
+      "debouches_entreprises": ["Sociétés Minières", "Compagnies Pétrolières"]
+    },
+    {
+      "id": "education",
+      "nom": "Enseignement et Formation",
+      "description": "Formation pédagogique pour enseigner au primaire, secondaire ou supérieur.",
+      "series_compatibles": ["A", "C", "D"],
+      "debouches": [
+        "Enseignant Primaire",
+        "Enseignant Secondaire",
+        "Formateur",
+        "Inspecteur Pédagogique"
+      ],
+      "competences_requises": ["Pédagogie", "Patience", "Communication"],
+      "salaire_indicatif": "200000-500000 FCFA/mois",
+      "universites": ["UJKZ"],
+      "debouches_entreprises": ["Ministère Éducation", "Écoles Privées", "ONG Éducation"]
+    },
+    {
+      "id": "sport_loisirs",
+      "nom": "Sport et Loisirs",
+      "description": "Formation en gestion du sport, entraînement sportif et animation loisirs.",
+      "series_compatibles": ["E"],
+      "debouches": [
+        "Entraîneur Sportif",
+        "Manager Sportif",
+        "Responsable Loisirs"
+      ],
+      "competences_requises": ["Passionné sport", "Leadership", "Animation"],
+      "salaire_indicatif": "200000-400000 FCFA/mois",
+      "universites": ["UJKZ"],
+      "debouches_entreprises": ["Clubs Sportifs", "Collectivités", "ONG"]
+    }
+  ],
+  "bac_series_mapping": {
+    "A": {
+      "nom": "Série A (Littéraire)",
+      "description": "Pour ceux qui excellent en français, histoire, géographie et langues",
+      "filieres_compatibles": ["droit", "communication", "education", "gestion", "marketing"]
+    },
+    "C": {
+      "nom": "Série C (Scientifique)",
+      "description": "Pour ceux excellents en mathématiques, physique et chimie",
+      "filieres_compatibles": ["informatique", "genie_civil", "architecture", "ingenierie", "energie", "mines_petrole"]
+    },
+    "D": {
+      "nom": "Série D (Sciences Naturelles)",
+      "description": "Pour ceux excellents en biologie, chimie et sciences",
+      "filieres_compatibles": ["medecine", "pharmacie", "agronomie", "veterinaire", "education"]
+    },
+    "E": {
+      "nom": "Série E (Économique)",
+      "description": "Pour ceux intéressés par l'économie, les chiffres et la gestion",
+      "filieres_compatibles": ["gestion", "marketing", "commerce", "finance", "comptabilite"]
+    },
+    "F": {
+      "nom": "Série F (Technique)",
+      "description": "Pour ceux qui préfèrent la pratique et les travaux manuels",
+      "filieres_compatibles": ["genie_civil", "electricite", "mecanique", "menuiserie", "construction"]
+    },
+    "H": {
+      "nom": "Série H (Hôtellerie)",
+      "description": "Pour ceux passionnés par l'hôtellerie, la restauration et le tourisme",
+      "filieres_compatibles": ["hotellerie", "tourisme", "restauration", "gestion_hotelier"]
+    }
+  },
+  "formations_professionnelles": [
+    {
+      "id": "cap_electricite",
+      "nom": "CAP Électricité",
+      "description": "Formation courte (2-3 ans) en électricité et installation électrique",
+      "duree": "2-3 ans",
+      "type": "CAP",
+      "debouches": ["Électricien", "Installateur Électrique", "Technicien Maintenance"],
+      "salaire_indicatif": "150000-350000 FCFA/mois"
+    },
+    {
+      "id": "cap_menuiserie",
+      "nom": "CAP Menuiserie",
+      "description": "Formation courte en menuiserie et travail du bois",
+      "duree": "2-3 ans",
+      "type": "CAP",
+      "debouches": ["Menuisier", "Ebéniste", "Entrepreneur en Menuiserie"],
+      "salaire_indicatif": "120000-300000 FCFA/mois"
+    },
+    {
+      "id": "bep_secretariat",
+      "nom": "BEP Secrétariat",
+      "description": "Formation en secrétariat et gestion administratif",
+      "duree": "2 ans",
+      "type": "BEP",
+      "debouches": ["Secrétaire", "Assistant Administratif"],
+      "salaire_indicatif": "150000-300000 FCFA/mois"
+    }
+  ]
+}

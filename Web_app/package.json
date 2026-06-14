@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
+    "@xenova/transformers": "^2.17.2",
     "idb": "^8.0.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -32,6 +33,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "netlify-cli": "^17.35.1",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.2",

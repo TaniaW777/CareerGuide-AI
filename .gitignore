@@ -41,3 +41,4 @@ CareerGuide_AI_frontend/.git/
 .DS_Store
 Thumbs.db
 \n# Backup of nested frontend Git metadata\nfrontend_git_backup/\n
+.codebuddy

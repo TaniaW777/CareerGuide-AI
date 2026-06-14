@@ -113,11 +113,13 @@ class ConnectivityService extends ChangeNotifier {
   /// Met à jour l'indicateur de mode (Online/Offline)
   void _updateModeIndicator() {
     if (_isBackendOnline && _isGemmaReady) {
-      _modeIndicator = '🟢 ONLINE (Gemma Prêt)';
+      _modeIndicator = '🟢 Connecté';
     } else if (_isBackendOnline) {
-      _modeIndicator = '🟡 ONLINE (Chargement...)';
+      _modeIndicator = '🟡 Connecté';
+    } else if (_isNetworkConnected) {
+      _modeIndicator = '🟢 Connecté';
     } else {
-      _modeIndicator = '🔴 OFFLINE';
+      _modeIndicator = '🔴 Déconnecté';
     }
   }
   

@@ -124,13 +124,13 @@ class ConnectivityProvider with ChangeNotifier {
 
   void _updateModeLabel() {
     if (_isBackendOnline && _isGemmaReady) {
-      _modeLabel = '🟢 ONLINE (Gemma prêt)';
+      _modeLabel = '🟢 Connecté';
     } else if (_isBackendOnline) {
-      _modeLabel = '🟡 ONLINE (Gemma chargement)';
+      _modeLabel = '🟡 Connecté';
     } else if (isConnected) {
-      _modeLabel = '🟠 ONLINE (Backend indisponible)';
+      _modeLabel = '🟢 Connecté';
     } else {
-      _modeLabel = '🔴 OFFLINE';
+      _modeLabel = '🔴 Déconnecté';
     }
   }
 

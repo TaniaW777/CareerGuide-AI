@@ -151,24 +151,24 @@ class SettingsScreen extends StatelessWidget {
           Consumer<ConnectivityProvider>(
             builder: (context, connectivityProvider, child) => _buildSettingItem(
               context,
-              'Mode Offline-First',
-              Icons.cloud_off_outlined,
-              Colors.deepOrange,
+              'Connexion IA',
+              Icons.wifi_outlined,
+              Colors.blueAccent,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    connectivityProvider.offlineFirstMode ? 'Activé' : 'Désactivé',
+                    connectivityProvider.offlineFirstMode ? 'Hors-ligne' : 'Connecté',
                     style: TextStyle(color: isDark ? Colors.white70 : Colors.grey[700], fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 10),
                   Switch.adaptive(
-                    value: connectivityProvider.offlineFirstMode,
+                    value: !connectivityProvider.offlineFirstMode,
                     onChanged: (v) async {
-                      await connectivityProvider.setOfflineFirstMode(v);
+                      await connectivityProvider.setOfflineFirstMode(!v);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(v ? '🔴 Mode Offline-First activé' : '🟢 Mode Online standard activé')),
+                          SnackBar(content: Text(v ? '🟢 Connecté au conseiller IA' : '🔴 Déconnecté (Mode Hors-ligne)')),
                         );
                       }
                     },
