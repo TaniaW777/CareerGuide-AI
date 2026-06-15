@@ -16,7 +16,7 @@ export default function Profil() {
   const [isWizard, setIsWizard] = useState(!profile);
   const [currentStep, setCurrentStep] = useState(-1); // -1 = Personal Info, 0 to N-1 = Questions
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [aiSummary, setAiSummary] = useState('');
+
   const [selectedRec, setSelectedRec] = useState<Recommendation | null>(null);
 
   // Form state
@@ -105,10 +105,9 @@ export default function Profil() {
     setIsSummarizing(true);
     setProfile(finalProfile);
     
-    // Call Local AI (Transformers.js)
+    // Transformers.js local UI removed
     try {
-      const summary = await localAiService.summarizeProfile(finalProfile);
-      setAiSummary(summary);
+      await localAiService.summarizeProfile(finalProfile);
     } catch (e) {
       console.log(e);
     }
