@@ -239,7 +239,11 @@ export async function fetchAI(messages: { role: string; content: string }[], max
   } catch (err) {
     console.log('Ollama local non disponible. Mode hors-ligne activé.', err);
     store.setAIEngineStatus('offline');
-    throw new Error('All AI engines failed');
+    
+    if (useOnlineApi) {
+      throw new Error('GROQ_MISSING_KEY');
+    }
+    throw new Error('OLLAMA_FAILED');
   }
 }
 
@@ -330,12 +334,16 @@ Profil de l'utilisateur actuel: Nom: ${name}, Niveau: ${level}, Intérêts: ${in
         return reply;
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log('API Cloud non disponible et Ollama introuvable.', error);
+    
+    if (error.message === 'GROQ_MISSING_KEY' || (isOnline && !import.meta.env.VITE_GROQ_API_KEY)) {
+      return "⚠️ Configuration requise : La clé API Groq n'est pas configurée sur ce site web. L'administrateur doit l'ajouter dans les variables d'environnement (Netlify) pour que l'IA fonctionne en ligne.";
+    }
   }
 
   // Fallback si l'IA échoue ou si hors-ligne sans modèle local
-  return "Désolé, je ne peux pas générer de réponse personnalisée en mode hors-ligne sans le modèle IA (Ollama) installé sur ton appareil. Connecte-toi à internet pour discuter avec moi !";
+  return "Désolé, je n'arrive pas à me connecter au cerveau de l'IA. Si tu es sur le site Web, vérifie ta connexion internet. Si tu veux l'utiliser hors-ligne, télécharge l'application de bureau (Desktop) qui intègre Ollama !";
 }
 
 // Cache for Wikipedia summaries
