@@ -1,0 +1,8 @@
+{
+  "name": "careerguide-root",
+  "private": true,
+  "scripts": {
+    "dev": "cd Web_app && npm run dev",
+    "build:electron": "cd Web_app && npm run build:electron"
+  }
+}
