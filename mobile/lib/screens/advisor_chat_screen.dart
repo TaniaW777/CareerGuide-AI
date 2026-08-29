@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../core/widgets/search_bar_widget.dart';
+import '../services/llm_service.dart';
+import '../services/chat_history_service.dart';
 
 class AdvisorChatScreen extends StatefulWidget {
   const AdvisorChatScreen({super.key});
@@ -10,188 +11,430 @@ class AdvisorChatScreen extends StatefulWidget {
 }
 
 class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'isUser': false,
-      'text': 'Bonjour ! Je suis votre conseiller IA. Comment puis-je vous aider dans votre orientation aujourd\'hui ?'
-    },
-  ];
-
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final ChatHistoryService _history = ChatHistoryService();
+  final LlmService _llm = LlmService();
+
   bool _isTyping = false;
+  bool _llmReady = false;
+  String _statusText = 'Chargement...';
 
-  void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    
-    setState(() {
-      _messages.add({'isUser': true, 'text': text});
-      _controller.clear();
-      _isTyping = true;
-    });
-
-    _generateResponse(text);
+  @override
+  void initState() {
+    super.initState();
+    _checkAndInitLlm();
   }
 
-  void _generateResponse(String userText) {
-    String response;
-    final query = userText.toLowerCase();
-
-    if (query.contains('école') || query.contains('etablissement')) {
-      response = 'Nous avons répertorié plus de 50 établissements au Burkina Faso. Vous pouvez consulter la liste dans l\'onglet "ÉCOLES" pour voir les détails et postuler.';
-    } else if (query.contains('informatique') || query.contains('logiciel') || query.contains('tech')) {
-      response = 'L\'informatique est un secteur très dynamique. Au Burkina, des instituts comme l\'ESI ou l\'IST offrent d\'excellentes formations en Génie Logiciel.';
-    } else if (query.contains('médecine') || query.contains('santé')) {
-      response = 'La santé est une noble vocation. L\'Université Joseph Ki-Zerbo possède l\'une des facultés de médecine les plus renommées de la sous-région.';
-    } else if (query.contains('bourse')) {
-      response = 'Il existe plusieurs bourses : nationales (FONER), d\'excellence, et internationales. Regardez la section "Bourses" dans l\'onglet ÉCOLES.';
-    } else if (query.contains('merci') || query.contains('au revoir')) {
-      response = 'Je vous en prie ! N\'hésitez pas si vous avez d\'autres questions sur votre futur parcours.';
-    } else {
-      response = 'C\'est une question intéressante. D\'après votre profil, je vous suggère de regarder les filières qui allient vos passions et les besoins du marché actuel.';
+  Future<void> _checkAndInitLlm() async {
+    // Si déjà prêt (préchargé au démarrage)
+    if (_llm.isReady) {
+      setState(() {
+        _llmReady = true;
+        _statusText = 'Prêt';
+      });
+      return;
     }
 
-    Future.delayed(const Duration(seconds: 2), () {
+    // Sinon initialise maintenant
+    setState(() => _statusText = 'Initialisation...');
+    try {
+      await _llm.initialize();
       if (mounted) {
         setState(() {
-          _isTyping = false;
-          _messages.add({
-            'isUser': false,
-            'text': response
-          });
+          _llmReady = true;
+          _statusText = 'Prêt';
         });
       }
+    } catch (e) {
+      print('[CHAT] Init error: $e');
+      if (mounted) {
+        setState(() => _statusText = 'Erreur: $e');
+        _history.add({
+          'isUser': false,
+          'text': '⚠️ Impossible de charger le conseiller.\nErreur : $e',
+        });
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _isTyping || !_llmReady) return;
+
+    _history.add({'isUser': true, 'text': text});
+    _controller.clear();
+
+    if (mounted) setState(() => _isTyping = true);
+    _scrollToBottom();
+
+    print('[CHAT] Sending: "$text"');
+    final response = await _llm.generate(text);
+    print('[CHAT] Got response: "$response"');
+
+    if (mounted) {
+      _history.add({'isUser': false, 'text': response});
+      setState(() => _isTyping = false);
+      _scrollToBottom();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final messages = _history.messages;
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : const Color(0xFFF7F8FA),
       appBar: AppBar(
-        title: const Text('Conseiller IA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _llmReady
+                      ? [const Color(0xFF0F52BA), const Color(0xFF4A90E2)]
+                      : [Colors.grey, Colors.grey.shade400],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome,
+                  color: Colors.white, size: 15),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Conseiller IA',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 16)),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: _llmReady
+                            ? Colors.green
+                            : Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _statusText,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: _llmReady ? Colors.green : Colors.orange,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        backgroundColor:
+            isDark ? AppColors.surfaceDark : Colors.white,
         foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, size: 20),
+            tooltip: 'Nouvelle conversation',
+            onPressed: () async {
+              await _llm.resetChat();
+              _history.clear();
+              if (mounted) setState(() {});
+            },
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child:
+              Container(height: 1, color: Colors.grey.withOpacity(0.1)),
+        ),
       ),
       body: Column(
         children: [
+          // Bannière chargement
+          if (!_llmReady)
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              color: Colors.orange.withOpacity(0.1),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.orange),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _statusText,
+                      style: TextStyle(
+                          color: Colors.orange[800],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Messages
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(24),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              itemCount: messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, index) {
-                if (_isTyping && index == _messages.length) {
+                if (_isTyping && index == messages.length) {
                   return _buildTypingIndicator();
                 }
-                final msg = _messages[index];
-                return _buildChatBubble(msg['text'], msg['isUser']);
+                final msg = messages[index];
+                return _buildBubble(
+                  msg['text'] as String,
+                  msg['isUser'] as bool,
+                );
               },
             ),
           ),
-          _buildInputArea(),
+
+          _buildInputArea(isDark),
         ],
       ),
     );
   }
 
   Widget _buildTypingIndicator() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        margin: const EdgeInsets.only(bottom: 14, left: 40),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.grey[50],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Text(
-          'IA est en train d\'écrire...',
-          style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChatBubble(String text, bool isUser) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(16),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-        decoration: BoxDecoration(
-          color: isUser ? AppColors.primaryLight : (isDark ? AppColors.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
-            bottomRight: isUser ? Radius.zero : const Radius.circular(20),
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.shade100),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2))
           ],
-          border: isUser ? null : Border.all(color: isDark ? AppColors.borderDark : Colors.grey[100]!),
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
-            height: 1.5,
-            fontSize: 15,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Dot(delay: 0),
+            const SizedBox(width: 5),
+            _Dot(delay: 200),
+            const SizedBox(width: 5),
+            _Dot(delay: 400),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildInputArea() {
+  Widget _buildBubble(String text, bool isUser) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isUser) ...[
+            Container(
+              width: 30,
+              height: 30,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF0F52BA), Color(0xFF4A90E2)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome,
+                  size: 14, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 10),
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72),
+              decoration: BoxDecoration(
+                color: isUser ? const Color(0xFF0F52BA) : Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: isUser
+                      ? const Radius.circular(18)
+                      : const Radius.circular(4),
+                  bottomRight: isUser
+                      ? const Radius.circular(4)
+                      : const Radius.circular(18),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2))
+                ],
+                border: isUser
+                    ? null
+                    : Border.all(color: Colors.grey.shade100),
+              ),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: isUser ? Colors.white : Colors.black87,
+                  height: 1.5,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          if (isUser) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F52BA).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.person_rounded,
+                  size: 15, color: Color(0xFF0F52BA)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputArea(bool isDark) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? AppColors.backgroundDark : Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
+        color: isDark ? AppColors.backgroundDark : Colors.white,
+        border:
+            Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, -2))
+        ],
       ),
       child: SafeArea(
         child: Row(
           children: [
             Expanded(
-              child: SearchBarWidget(
-                controller: _controller,
-                hintText: 'Posez votre question...',
-                prefixIcon: Icons.psychology_outlined,
-                onSubmitted: _sendMessage,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceDark : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: _llmReady
+                        ? const Color(0xFF0F52BA).withOpacity(0.2)
+                        : Colors.grey.shade200,
+                  ),
+                ),
+                child: TextField(
+                  controller: _controller,
+                  enabled: _llmReady && !_isTyping,
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: _llmReady
+                        ? 'Pose ta question...'
+                        : _statusText,
+                    hintStyle:
+                        TextStyle(color: Colors.grey[400], fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 12),
+                    prefixIcon: Icon(
+                      Icons.psychology_outlined,
+                      color: _llmReady
+                          ? const Color(0xFF0F52BA)
+                          : Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                  onSubmitted: (_) => _sendMessage(),
+                ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             GestureDetector(
-              onTap: _sendMessage,
-              child: Container(
-                padding: const EdgeInsets.all(15),
+              onTap: _llmReady && !_isTyping ? _sendMessage : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryLight, Color(0xFF1A56DB)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  gradient: LinearGradient(
+                    colors: _llmReady && !_isTyping
+                        ? [
+                            const Color(0xFF0F52BA),
+                            const Color(0xFF4A90E2)
+                          ]
+                        : [Colors.grey.shade300, Colors.grey.shade300],
                   ),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryLight.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    )
-                  ],
+                  boxShadow: _llmReady && !_isTyping
+                      ? [
+                          BoxShadow(
+                              color: const Color(0xFF0F52BA).withOpacity(0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 5))
+                        ]
+                      : [],
                 ),
-                child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                child: const Icon(Icons.send_rounded,
+                    color: Colors.white, size: 20),
               ),
             ),
           ],
@@ -201,4 +444,48 @@ class _AdvisorChatScreenState extends State<AdvisorChatScreen> {
   }
 }
 
+// ── Dot animé ──────────────────────────────────────────────────────────────
 
+class _Dot extends StatefulWidget {
+  final int delay;
+  const _Dot({required this.delay});
+
+  @override
+  State<_Dot> createState() => _DotState();
+}
+
+class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    Future.delayed(
+        Duration(milliseconds: widget.delay),
+        () => mounted ? _ctrl.repeat(reverse: true) : null);
+    _anim = Tween(begin: 0.3, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _anim,
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: const BoxDecoration(
+            color: Color(0xFF0F52BA), shape: BoxShape.circle),
+      ),
+    );
+  }
+}
