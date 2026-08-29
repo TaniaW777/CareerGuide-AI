@@ -1,365 +1,573 @@
 import 'package:flutter/material.dart';
-import '../core/theme/app_colors.dart';
-import 'annex_screens.dart';
+import '../services/user_data_service.dart';
+import 'question_flow_screen.dart';
 import 'main_navigation.dart';
 
 class CareerPathsScreen extends StatefulWidget {
-  final String userLevel; // Passed from profile/processing
-  const CareerPathsScreen({super.key, this.userLevel = 'Terminale'});
+  final String userLevel;
+  final List<Map<String, dynamic>> recommendations;
+
+  // Peut être ouvert avec des données passées OU chargées depuis le cache
+  const CareerPathsScreen({
+    super.key,
+    this.userLevel = '',
+    this.recommendations = const [],
+  });
 
   @override
   State<CareerPathsScreen> createState() => _CareerPathsScreenState();
 }
 
-class _CareerPathsScreenState extends State<CareerPathsScreen> {
-  void _showShareDialog(BuildContext context, String title) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 24),
-            const Text('Partager cette recommandation', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text('Partagez vos résultats pour "$title" avec vos amis ou conseillers.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _shareOption(context, Icons.message, 'WhatsApp', Colors.green),
-                _shareOption(context, Icons.facebook, 'Facebook', Colors.blue),
-                _shareOption(context, Icons.link, 'Copier', Colors.grey),
-              ],
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
+class _CareerPathsScreenState extends State<CareerPathsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  List<Animation<double>> _itemAnimations = [];
+
+  List<Map<String, dynamic>> _recommendations = [];
+  String _userLevel = '';
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
     );
+    _loadData();
   }
 
-  Widget _shareOption(BuildContext context, IconData icon, String label, Color color) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Partage sur $label en cours...'),
-            backgroundColor: color,
-            behavior: SnackBarBehavior.floating,
+  Future<void> _loadData() async {
+    List<Map<String, dynamic>> recs;
+    String level;
+
+    // Si des données sont passées en paramètre, on les utilise
+    // Sinon on charge depuis le cache
+    if (widget.recommendations.isNotEmpty) {
+      recs = widget.recommendations;
+      level = widget.userLevel;
+    } else {
+      recs = await UserDataService().getRecommendations();
+      level = await UserDataService().getUserLevel();
+    }
+
+    _buildAnimations(recs.length);
+
+    setState(() {
+      _recommendations = recs;
+      _userLevel = level;
+      _loading = false;
+    });
+
+    _animCtrl.forward();
+  }
+
+  void _buildAnimations(int count) {
+    final n = count == 0 ? 1 : count;
+    _itemAnimations = List.generate(
+      n,
+      (i) => Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animCtrl,
+          curve: Interval(
+            i * 0.15,
+            (i * 0.15 + 0.6).clamp(0.0, 1.0),
+            curve: Curves.easeOutCubic,
           ),
-        );
-      },
-      child: Column(
-        children: [
-          CircleAvatar(radius: 28, backgroundColor: color.withOpacity(0.1), child: Icon(icon, color: color, size: 28)),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
+        ),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.backgroundDark : const Color(0xFFF7F8FA);
-    final cardColor = isDark ? AppColors.surfaceDark : Colors.white;
-
-    // Polyvalent data based on level
-    final bool is3eme = widget.userLevel == '3ème';
-
-    final paths = is3eme ? [
-      {
-        'title': 'Série C (Scientifique)',
-        'institution': 'Lycée Scientifique National',
-        'match': '96%',
-        'passion': 92,
-        'skills': 98,
-        'tag': 'Filière Excellence',
-        'desc': 'Tes excellentes notes en mathématiques et physique au BEPC te destinent naturellement vers la série C pour devenir ingénieur.',
-        'icon': Icons.functions,
-        'color': Colors.blue,
-      },
-      {
-        'title': 'Série E (Technique)',
-        'institution': 'Lycée Polytechnique de Ouaga',
-        'match': '89%',
-        'passion': 85,
-        'skills': 93,
-        'tag': 'Technique & Innovation',
-        'desc': 'Ton penchant pour la mécanique et l\'électronique t\'offre une voie royale en série E vers les métiers de l\'industrie.',
-        'icon': Icons.settings_input_component,
-        'color': Colors.orange,
-      },
-    ] : [
-      {
-        'title': 'Génie Logiciel',
-        'institution': 'Université Joseph Ki-Zerbo',
-        'match': '94%',
-        'passion': 98,
-        'skills': 90,
-        'tag': 'Numérique',
-        'desc': 'Ton profil créatif et analytique après ton Bac C/D te permet d\'exceller dans le développement logiciel au Burkina.',
-        'icon': Icons.code,
-        'color': AppColors.primaryLight,
-      },
-      {
-        'title': 'Agronomie & Eau',
-        'institution': 'Université de Bobo / Nazi Boni',
-        'match': '88%',
-        'passion': 95,
-        'skills': 81,
-        'tag': 'Secteur Vital',
-        'desc': 'L\'agriculture est le moteur de notre économie. Ta passion pour l\'environnement te guidera vers la sécurité alimentaire.',
-        'icon': Icons.eco,
-        'color': Colors.green,
-      },
-    ];
-
-
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        title: const Text('Mes Recommandations', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: isDark ? Colors.white : Colors.black,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home_outlined),
-            onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigation())),
-          )
-        ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          // Summary header
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryLight, Color(0xFF1A56DB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [BoxShadow(color: AppColors.primaryLight.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Analyse Terminée !', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-                            const SizedBox(height: 4),
-                            Text('${paths.length} filières correspondent à votre profil', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) {
-                  if (i >= paths.length) return null;
-                  final p = paths[i];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: _buildCard(context, p, cardColor),
-                  );
-                },
-                childCount: paths.length,
-              ),
-            ),
-          ),
-          
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: ElevatedButton(
-                onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavigation())),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 5,
-                ),
-                child: const Text('ACCÉDER À MON TABLEAU DE BORD', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ],
-      ),
-    );
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
   }
 
-  Widget _buildCard(BuildContext context, Map<String, dynamic> p, Color cardColor) {
-    final color = p['color'] as Color;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, 8))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(p['icon'] as IconData, color: color, size: 28),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(p['match'] as String, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 24)),
-                  const Text('MATCH', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                ],
-              ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0F52BA),
+              Color(0xFF4A90E2),
+              Color(0xFFF0F4F8),
+              Colors.white,
+              Colors.white,
             ],
+            stops: [0.0, 0.35, 0.55, 0.7, 1.0],
           ),
-          const SizedBox(height: 20),
-          Text(p['title'] as String, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: isDark ? Colors.white : Colors.black)),
-          const SizedBox(height: 4),
-          Row(
+        ),
+        child: SafeArea(
+          child: Column(
             children: [
-              Icon(Icons.school_outlined, size: 14, color: color.withOpacity(0.7)),
-              const SizedBox(width: 6),
-              Text(
-                p['institution'] as String,
-                style: TextStyle(color: isDark ? Colors.white70 : Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(p['tag'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(height: 20),
-
-          
-          // Passions & Skills percentages
-          Row(
-            children: [
-              _metricBadge('Passion', p['passion'] as int, Colors.pink),
-              const SizedBox(width: 12),
-              _metricBadge('Skills', p['skills'] as int, Colors.blue),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          Text(
-            p['desc'] as String,
-            style: TextStyle(color: isDark ? Colors.white70 : Colors.grey.shade600, fontSize: 14, height: 1.6),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CareerDetailScreen(
-                        title: p['title'] as String,
-                        match: p['match'] as String,
-                        tag: p['tag'] as String,
-                        desc: p['desc'] as String,
-                        color: color,
+              // ── Header ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        RichText(
+                          text: const TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'CareerGuide ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'AI',
+                                style: TextStyle(
+                                  color: Color(0xFFFF9800),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        if (_userLevel.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              _userLevel,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tes recommandations 🎯',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _loading
+                                ? 'Chargement...'
+                                : _recommendations.isEmpty
+                                    ? 'Aucune recommandation'
+                                    : '${_recommendations.length} filière${_recommendations.length > 1 ? 's' : ''} identifiée${_recommendations.length > 1 ? 's' : ''} pour toi',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.75),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryLight,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                  child: const Text('DÉTAILS COMPLETS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
+
+              // ── Contenu ──────────────────────────────────────────────
+              Expanded(
+                child: _loading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF0F52BA),
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : _recommendations.isEmpty
+                        ? _buildEmpty()
+                        : ListView.builder(
+                            padding:
+                                const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                            itemCount: _recommendations.length,
+                            itemBuilder: (context, index) {
+                              final animIndex =
+                                  index.clamp(0, _itemAnimations.length - 1);
+                              return AnimatedBuilder(
+                                animation: _itemAnimations[animIndex],
+                                builder: (context, child) {
+                                  final v = _itemAnimations[animIndex].value;
+                                  return Opacity(
+                                    opacity: v,
+                                    child: Transform.translate(
+                                      offset: Offset(0, 30 * (1 - v)),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: _RecommendationCard(
+                                  rec: _recommendations[index],
+                                  isTop: index == 0,
+                                  rank: index + 1,
+                                ),
+                              );
+                            },
+                          ),
+              ),
+
+              // ── Actions ───────────────────────────────────────────────
               Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.share_outlined, size: 20),
-                  onPressed: () => _showShareDialog(context, p['title'] as String),
+                child: Column(
+                  children: [
+                    // Bouton principal
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const MainNavigation()),
+                      ),
+                      icon: const Icon(Icons.explore_rounded, size: 20),
+                      label: const Text(
+                        "Explorer les établissements",
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F52BA),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 52),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                        elevation: 4,
+                        shadowColor:
+                            const Color(0xFF0F52BA).withOpacity(0.35),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Bouton refaire
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        // Reset questionnaire pour permettre de le refaire
+                        await UserDataService().resetQuestionnaire();
+                        if (!context.mounted) return;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const QuestionFlowScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      label: const Text(
+                        "Refaire le questionnaire",
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF0F52BA),
+                        minimumSize: const Size(double.infinity, 48),
+                        side: const BorderSide(
+                            color: Color(0xFF0F52BA), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _metricBadge(String label, int value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('$label: ', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-          Text('$value%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
-        ],
+  Widget _buildEmpty() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F52BA).withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off_rounded,
+                color: Color(0xFF0F52BA),
+                size: 38,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "Aucune recommandation",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F52BA),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Réponds au questionnaire pour obtenir tes recommandations personnalisées.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[500],
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const QuestionFlowScreen()),
+              ),
+              icon: const Icon(Icons.quiz_rounded, size: 18),
+              label: const Text("Répondre au questionnaire"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F52BA),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ─── Card recommandation ──────────────────────────────────────────────────────
+
+class _RecommendationCard extends StatelessWidget {
+  final Map<String, dynamic> rec;
+  final bool isTop;
+  final int rank;
+
+  const _RecommendationCard({
+    required this.rec,
+    required this.isTop,
+    required this.rank,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final schools = (rec["schools"] as List?) ?? [];
+    final score = (rec["score"] as num?)?.toInt() ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: isTop
+            ? Border.all(color: const Color(0xFFFF9800), width: 2)
+            : Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: isTop
+                ? const Color(0xFFFF9800).withOpacity(0.12)
+                : Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Titre + rang
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isTop
+                        ? const Color(0xFFFF9800)
+                        : const Color(0xFF0F52BA).withOpacity(0.09),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      "#$rank",
+                      style: TextStyle(
+                        color: isTop ? Colors.white : const Color(0xFF0F52BA),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        rec["program"] ?? "",
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F52BA),
+                        ),
+                      ),
+                      if (isTop) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFFFF9800).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "🏆 Meilleur choix pour toi",
+                            style: TextStyle(
+                              color: Color(0xFFFF9800),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Score
+            Row(
+              children: [
+                Text(
+                  "Compatibilité",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  "$score%",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: score >= 80
+                        ? const Color(0xFF0F52BA)
+                        : const Color(0xFFFF9800),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(100),
+              child: LinearProgressIndicator(
+                value: score / 100,
+                minHeight: 7,
+                backgroundColor:
+                    const Color(0xFF0F52BA).withOpacity(0.09),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  score >= 80
+                      ? const Color(0xFF0F52BA)
+                      : const Color(0xFFFF9800),
+                ),
+              ),
+            ),
+
+            // Écoles
+            if (schools.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: Color(0xFFF0F0F0)),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(Icons.school_rounded,
+                      size: 14, color: Color(0xFF0F52BA)),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Établissements au Burkina Faso",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              ...schools.map(
+                (school) => Padding(
+                  padding: const EdgeInsets.only(bottom: 7),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on_rounded,
+                          size: 14, color: Color(0xFFFF9800)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          "${school["name"]} — ${school["city"]}",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF1A1A2E),
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -1,10 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import 'institution_detail_screen.dart';
 import 'career_paths_screen.dart';
 
-class ScholarshipListScreen extends StatelessWidget {
+class ScholarshipListScreen extends StatefulWidget {
   const ScholarshipListScreen({super.key});
+
+  @override
+  State<ScholarshipListScreen> createState() => _ScholarshipListScreenState();
+}
+
+class _ScholarshipListScreenState extends State<ScholarshipListScreen> {
+  String _userLevel = '3ème';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserLevel();
+  }
+
+  Future<void> _loadUserLevel() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userLevel = prefs.getString('user_classe') ?? '3ème';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,30 +34,40 @@ class ScholarshipListScreen extends StatelessWidget {
       {
         'title': 'Bourse d\'Excellence Gouvernementale',
         'amount': '500 000 FCFA',
-        'deadline': '30 Juin 2024',
+        'deadline': '30 Juin 2025',
         'type': 'Nationale',
         'color': AppColors.primaryLight,
+        'particularity': 'Réservée aux meilleurs élèves du pays.',
+        'how_to_obtain': _userLevel == '3ème' 
+            ? 'Avoir une moyenne > 16/20 au BEPC.' 
+            : 'Avoir une mention Bien ou Très Bien au Bac.',
       },
       {
         'title': 'Bourse Union Africaine STEM',
         'amount': '1 200 000 FCFA',
-        'deadline': '15 Juillet 2024',
+        'deadline': '15 Juillet 2025',
         'type': 'Internationale',
         'color': Colors.green,
+        'particularity': 'Soutien aux filières scientifiques et techniques.',
+        'how_to_obtain': 'Inscription dans une filière C, D, E ou Ingénierie.',
       },
       {
         'title': 'Bourse Numérique & Entrepreneuriat',
         'amount': '350 000 FCFA',
-        'deadline': '20 Mai 2024',
+        'deadline': '20 Mai 2025',
         'type': 'Privée',
         'color': Colors.orange,
+        'particularity': 'Pour les projets innovants dans le digital.',
+        'how_to_obtain': 'Présenter un projet de startup ou d\'application.',
       },
       {
         'title': 'Aide à la Formation Professionnelle',
         'amount': '200 000 FCFA',
-        'deadline': '31 Août 2024',
+        'deadline': '31 Août 2025',
         'type': 'ONG',
         'color': Colors.purple,
+        'particularity': 'Soutien social pour les familles modestes.',
+        'how_to_obtain': 'Fournir un certificat d\'indigence et être admis en centre de formation.',
       },
     ];
 
@@ -61,7 +92,7 @@ class ScholarshipListScreen extends StatelessWidget {
               color: isDark ? AppColors.surfaceDark : Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade100),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,10 +103,21 @@ class ScholarshipListScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(s['type'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: Row(
+                        children: [
+                          Icon(
+                            s['type'] == 'Nationale' ? Icons.flag :
+                            s['type'] == 'Internationale' ? Icons.public :
+                            s['type'] == 'Privée' ? Icons.business : Icons.volunteer_activism,
+                            size: 12, color: color,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(s['type'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
                     ),
                     Row(
                       children: [
@@ -97,21 +139,33 @@ class ScholarshipListScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 44),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Déposer une candidature'),
-                ),
+                const Divider(),
+                const SizedBox(height: 12),
+                _detailItem(Icons.info_outline, 'Particularité', s['particularity'] as String, isDark),
+                const SizedBox(height: 8),
+                _detailItem(Icons.how_to_reg, 'Comment l\'obtenir', s['how_to_obtain'] as String, isDark),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _detailItem(IconData icon, String label, String value, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: AppColors.primaryLight),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryLight)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87, height: 1.4)),
+      ],
     );
   }
 }
@@ -183,7 +237,7 @@ class CareerDetailScreen extends StatelessWidget {
       },
       child: Column(
         children: [
-          CircleAvatar(radius: 28, backgroundColor: color.withOpacity(0.1), child: Icon(icon, color: color, size: 28)),
+          CircleAvatar(radius: 28, backgroundColor: color.withValues(alpha: 0.1), child: Icon(icon, color: color, size: 28)),
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontSize: 12)),
         ],
@@ -216,13 +270,13 @@ class CareerDetailScreen extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.7)],
+                    colors: [color, color.withValues(alpha: 0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.school_outlined, size: 80, color: Colors.white.withOpacity(0.3)),
+                  child: Icon(Icons.school, size: 80, color: Colors.white.withValues(alpha: 0.3)),
                 ),
               ),
             ),
@@ -325,7 +379,7 @@ class CareerDetailScreen extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                   child: Text(type, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 12),
@@ -341,8 +395,8 @@ class CareerDetailScreen extends StatelessWidget {
       },
       child: Chip(
         label: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13)),
-        backgroundColor: color.withOpacity(0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: color.withOpacity(0.2))),
+        backgroundColor: color.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: color.withValues(alpha: 0.2))),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       ),
     );
@@ -382,6 +436,11 @@ class PrivateInstitutionsScreen extends StatelessWidget {
   }
 
   Widget _buildInstitut(BuildContext context, String name, String loc, String type, String cat, bool isDark, Color cardColor) {
+    IconData catIcon = Icons.business_rounded;
+    if (cat.contains('Tech')) catIcon = Icons.computer_rounded;
+    if (cat.contains('Commerce')) catIcon = Icons.payments_rounded;
+    if (cat.contains('Santé')) catIcon = Icons.local_hospital_rounded;
+
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -399,17 +458,17 @@ class PrivateInstitutionsScreen extends StatelessWidget {
           color: cardColor,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade100),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withOpacity(0.1),
+                color: AppColors.primaryLight.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.business, color: AppColors.primaryLight, size: 28),
+              child: Icon(catIcon, color: AppColors.primaryLight, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -418,7 +477,13 @@ class PrivateInstitutionsScreen extends StatelessWidget {
                 children: [
                   Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black)),
                   const SizedBox(height: 4),
-                  Text(loc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(loc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   Text(cat, style: const TextStyle(color: AppColors.primaryLight, fontSize: 12, fontWeight: FontWeight.w600)),
                 ],
