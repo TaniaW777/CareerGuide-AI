@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import recommendation, chat, model
+from app.api import recommendation, chat
 
 app = FastAPI(title="CareerGuideAI")
 
@@ -15,11 +15,6 @@ app.include_router(
     tags=["Chat"]
 )
 
-app.include_router(
-    model.router,
-    prefix="/model",
-    tags=["Model"]
-)
 @app.get("/")
 def root():
     return {"message": "backend running"}
