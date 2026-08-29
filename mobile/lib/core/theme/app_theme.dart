@@ -73,6 +73,8 @@ class AppTheme {
         onPrimary: AppColors.onPrimaryDark,
         onSurface: AppColors.onSurfaceDark,
       ),
+      scaffoldBackgroundColor: AppColors.backgroundDark,
+      appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent, elevation: 0, iconTheme: IconThemeData(color: AppColors.onSurfaceDark), titleTextStyle: TextStyle(color: AppColors.onSurfaceDark, fontSize: 20, fontWeight: FontWeight.bold)),
       textTheme: GoogleFonts.workSansTextTheme(ThemeData.dark().textTheme).copyWith(
         titleLarge: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 22, color: AppColors.onSurfaceDark),
         headlineLarge: GoogleFonts.workSans(fontWeight: FontWeight.bold, fontSize: 28, color: AppColors.onSurfaceDark),
@@ -80,7 +82,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryDark,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.onPrimaryDark,
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
@@ -91,10 +93,10 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.textFieldBackground, // White
+        fillColor: AppColors.surfaceDark,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         hintStyle: const TextStyle(color: AppColors.textFieldHint, fontSize: 14),
-        labelStyle: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+        labelStyle: const TextStyle(color: AppColors.onSurfaceDark, fontWeight: FontWeight.w500),
         suffixIconColor: AppColors.primaryDark,
         prefixIconColor: AppColors.primaryDark,
         border: OutlineInputBorder(
