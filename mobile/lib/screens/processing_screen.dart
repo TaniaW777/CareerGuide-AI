@@ -76,6 +76,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     print('[PROCESSING] interest=$interest series=$series subjects=$subjects');
 
     List<Map<String, dynamic>> results = [];
+    String resultSource = 'local_fallback';
     try {
       results = await RecommendationService().getRecommendations(
         level: level,
@@ -83,10 +84,17 @@ class _ProcessingScreenState extends State<ProcessingScreen>
         subjects: subjects,
         interest: interest,
       );
+      resultSource = 'backend';
       print('[PROCESSING] Backend results: $results');
     } catch (e) {
       print('[PROCESSING] Backend error: $e — fallback');
       results = _fallbackRecommendations(interest);
+    }
+
+    // Marque l'origine des résultats ('backend' ou 'local_fallback').
+    // Persisté avec les recommandations pour un affichage honnête.
+    for (final r in results) {
+      r['source'] = resultSource;
     }
 
     // ✅ Sauvegarde persistante — ne redemandera plus le questionnaire

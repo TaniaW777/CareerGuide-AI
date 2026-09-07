@@ -62,6 +62,12 @@ class _CareerPathsScreenState extends State<CareerPathsScreen>
     _animCtrl.forward();
   }
 
+  /// Vrai si les recommandations affichées viennent du fallback local
+  /// (backend injoignable) plutôt que du serveur.
+  bool get _isLocalFallback =>
+      _recommendations.isNotEmpty &&
+      _recommendations.first['source'] == 'local_fallback';
+
   void _buildAnimations(int count) {
     final n = count == 0 ? 1 : count;
     _itemAnimations = List.generate(
@@ -189,6 +195,38 @@ class _CareerPathsScreenState extends State<CareerPathsScreen>
                         ],
                       ),
                     ),
+                    if (!_loading && _isLocalFallback) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.white.withOpacity(0.35)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.cloud_off_rounded,
+                                color: Colors.white, size: 16),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Serveur non joignable : recommandations '
+                                'locales de secours, moins personnalisées.',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                   ],
                 ),
