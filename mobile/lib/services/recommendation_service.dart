@@ -2,7 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class RecommendationService {
-  static const String _baseUrl = "http://192.168.100.42:8000";
+  /// URL du backend, configurable à la compilation :
+  ///   flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8000
+  ///   flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com
+  ///
+  /// Valeur par défaut : 10.0.2.2 = localhost de la machine hôte depuis
+  /// l'émulateur Android. Pour un appareil physique, fournir l'adresse LAN
+  /// du développeur via --dart-define.
+  static const String _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
+  );
 
   Future<List<Map<String, dynamic>>> getRecommendations({
     required String level,
