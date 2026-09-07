@@ -225,10 +225,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                   child: const Icon(Icons.check_circle, color: Colors.green, size: 72),
                 ),
                 const SizedBox(height: 28),
-                Text('Candidature envoyée !', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
+                Text('Candidature (simulation)', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
                 const SizedBox(height: 12),
                 Text(
-                  'Votre dossier pour ${widget.institutionName} a été transmis. Vous recevrez une réponse dans les 5 à 10 jours ouvrables.',
+                  'Ceci est une démonstration : aucun dossier n\'a été transmis à ${widget.institutionName}. La soumission réelle n\'est pas encore implémentée.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 15, color: secondaryColor, height: 1.6),
                 ),

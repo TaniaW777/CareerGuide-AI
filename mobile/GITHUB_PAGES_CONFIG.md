@@ -29,7 +29,7 @@ git push origin frontend
 2. Vous devriez voir le workflow "Deploy to GitHub Pages" en cours d'exécution
 3. Une fois complété, votre app sera disponible à:
    ```
-   https://aziliz-kabore.github.io/CareerGuide-AI/
+   https://taniaw777.github.io/CareerGuide-AI/
    ```
 
 ## 📋 Fichiers modifiés
