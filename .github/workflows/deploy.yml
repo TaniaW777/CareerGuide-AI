@@ -10,31 +10,39 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
+    # Le projet Flutter se trouve dans mobile/ : toutes les commandes
+    # `run` s'exécutent depuis ce dossier.
+    defaults:
+      run:
+        working-directory: mobile
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: 'latest'
           channel: 'stable'
-      
+
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Build Flutter Web
         run: |
           flutter build web \
             --base-href=/CareerGuide-AI/ \
             --release \
             --pwa-strategy none
-      
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/web
+          # Les inputs d'action ne sont pas affectés par defaults.run :
+          # chemin relatif à la racine du dépôt.
+          publish_dir: ./mobile/build/web
           publish_branch: gh-pages
           nojekyll: true
           cname: false

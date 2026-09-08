@@ -211,7 +211,7 @@ class _DownloadScreenState extends State<DownloadScreen>
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Text(
-                      'Installe le conseiller IA une seule fois.\nL\'app fonctionnera ensuite 100% sans connexion.',
+                      'Installe le conseiller IA une seule fois.\nLe conseiller IA fonctionnera ensuite hors connexion.\nImages et recommandations serveur nécessitent Internet.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
